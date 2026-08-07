@@ -1,16 +1,18 @@
-import { dirname } from 'path'
-import { fileURLToPath } from 'url'
-import { FlatCompat } from '@eslint/eslintrc'
+import tseslint from 'typescript-eslint'
 
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = dirname(__filename)
-
-const compat = new FlatCompat({
-  baseDirectory: __dirname,
-})
-
-const eslintConfig = [
-  ...compat.extends('next/core-web-vitals', 'next/typescript'),
+// Switched away from `next/core-web-vitals` via FlatCompat: that combo
+// crashes under this project's installed eslint-plugin-react-hooks version
+// with "TypeError: Converting circular structure to JSON" (reproduced both
+// locally and on Vercel's Lint check). This is a Payload backend, not a
+// Next.js app in the usual sense, so the Next-specific web-vitals/image
+// rules weren't buying much anyway — a plain typescript-eslint config
+// covers what actually matters here (unused vars, ts-comment hygiene, etc.)
+// without the crash.
+export default tseslint.config(
+  {
+    ignores: ['.next/', 'node_modules/', 'src/payload-types.ts', 'src/payload-generated-schema.ts'],
+  },
+  ...tseslint.configs.recommended,
   {
     rules: {
       '@typescript-eslint/ban-ts-comment': 'warn',
@@ -30,9 +32,4 @@ const eslintConfig = [
       ],
     },
   },
-  {
-    ignores: ['.next/', 'src/payload-types.ts', 'src/payload-generated-schema.ts'],
-  },
-]
-
-export default eslintConfig
+)
