@@ -40,7 +40,10 @@ admin: {
   db: mongooseAdapter({
     url: process.env.DATABASE_URL || '',
   }),
-  cors: ['http://localhost:3002'],
+  cors: [
+    'http://localhost:3002',
+    process.env.FRONTEND_URL,
+  ].filter(Boolean) as string[],
   sharp,
   plugins: [],
 })
