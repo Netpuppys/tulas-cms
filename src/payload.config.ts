@@ -7,18 +7,31 @@ import sharp from 'sharp'
 
 import { Users } from './collections/Users'
 import { Media } from './collections/Media'
+import { Courses } from './collections/Courses'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
 
 export default buildConfig({
-  admin: {
-    user: Users.slug,
-    importMap: {
-      baseDir: path.resolve(dirname),
+admin: {
+  user: Users.slug,
+  meta: {
+    titleSuffix: '- Tulas CMS',
+    icons: [
+      { rel: 'icon', type: 'image/png', url: '/tulas-favicon.png' },
+    ],
+  },
+  components: {
+    graphics: {
+      Logo: '/components/AdminLogo#default',
+      Icon: '/components/AdminLogo#default',
     },
   },
-  collections: [Users, Media],
+  importMap: {
+    baseDir: path.resolve(dirname),
+  },
+},
+  collections: [Users, Media, Courses],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',
   typescript: {
@@ -27,6 +40,7 @@ export default buildConfig({
   db: mongooseAdapter({
     url: process.env.DATABASE_URL || '',
   }),
+  cors: ['http://localhost:3002'],
   sharp,
   plugins: [],
 })

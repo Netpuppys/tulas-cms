@@ -69,6 +69,7 @@ export interface Config {
   collections: {
     users: User;
     media: Media;
+    courses: Course;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -78,6 +79,7 @@ export interface Config {
   collectionsSelect: {
     users: UsersSelect<false> | UsersSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
+    courses: CoursesSelect<false> | CoursesSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -163,6 +165,298 @@ export interface Media {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "courses".
+ */
+export interface Course {
+  id: string;
+  title: string;
+  /**
+   * URL path, e.g. bba/business-analytics
+   */
+  slug: string;
+  /**
+   * e.g. "BBA", "BTech", "MBA"
+   */
+  program?: string | null;
+  /**
+   * e.g. "School of Management"
+   */
+  school?: string | null;
+  status?: ('draft' | 'published') | null;
+  sections?:
+    | (
+        | {
+            breadcrumb: {
+              currentRoute: string;
+            };
+            badge?: string | null;
+            title: string;
+            highlight?: string | null;
+            description: string;
+            chips?:
+              | {
+                  strong?: string | null;
+                  label: string;
+                  id?: string | null;
+                }[]
+              | null;
+            /**
+             * NOTE: the current skeleton code does not read a url/href for these buttons — ask your dev where the link destination comes from before relying on this.
+             */
+            buttons?:
+              | {
+                  /**
+                   * Must match a variant the Button component actually supports.
+                   */
+                  variant?:
+                    | (
+                        | 'orange'
+                        | 'orange_b'
+                        | 'orange_anim'
+                        | 'white_outline'
+                        | 'white_outline_b2'
+                        | 'white_outline_anim'
+                        | 'black_anim'
+                      )
+                    | null;
+                  /**
+                   * e.g. "IoCall" — must match an icon name the component recognizes
+                   */
+                  icon?: string | null;
+                  label: string;
+                  id?: string | null;
+                }[]
+              | null;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'hero';
+          }
+        | {
+            imageCard?: {
+              changeDesign?: number | null;
+              title?: string | null;
+              /**
+               * Use line breaks for multi-line highlight text
+               */
+              highlight?: string | null;
+              /**
+               * Photo shown in this card. Leave empty and the card shows without a photo.
+               */
+              image?: (string | null) | Media;
+            };
+            header?: {
+              label?: string | null;
+              title?: string | null;
+              highlight?: string | null;
+            };
+            description1?: string | null;
+            description2?: string | null;
+            quote?: string | null;
+            table?: {
+              headers?: string[] | null;
+              rows?:
+                | {
+                    program: string;
+                    duration?: string | null;
+                    eligibility?: string | null;
+                    id?: string | null;
+                  }[]
+                | null;
+            };
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'overview';
+          }
+        | {
+            header?: {
+              label?: string | null;
+              title?: string | null;
+              highlight?: string | null;
+              para?: string | null;
+            };
+            cards?:
+              | {
+                  title: string;
+                  desc?: string | null;
+                  pills?: string[] | null;
+                  id?: string | null;
+                }[]
+              | null;
+            extraCard?: {
+              /**
+               * Use line breaks for multi-line title
+               */
+              title?: string | null;
+              description?: string | null;
+            };
+            coreTags?: string[] | null;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'coursesGrid';
+          }
+        | {
+            image?: {
+              /**
+               * Multi-line placeholder text shown inside the visual block (used only if no photo is uploaded below)
+               */
+              placeholder?: string | null;
+              /**
+               * Optional real photo — if set, replaces the placeholder box with this image
+               */
+              photo?: (string | null) | Media;
+            };
+            header?: {
+              label?: string | null;
+              title?: string | null;
+              highlight?: string | null;
+              para?: string | null;
+            };
+            tags?: string[] | null;
+            roadmap?:
+              | {
+                  num: string;
+                  title: string;
+                  desc?: string | null;
+                  id?: string | null;
+                }[]
+              | null;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'aiSection';
+          }
+        | {
+            header?: {
+              label?: string | null;
+              title?: string | null;
+              highlight?: string | null;
+              para?: string | null;
+            };
+            certificationAssociations?:
+              | {
+                  isMain?: boolean | null;
+                  badge?: string | null;
+                  name: string;
+                  desc?: string | null;
+                  id?: string | null;
+                }[]
+              | null;
+            /**
+             * Currently rendered as plain strings — flag with your dev if these should support icons/images later.
+             */
+            handsOnItems?: string[] | null;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'certifications';
+          }
+        | {
+            badge?: string | null;
+            title?: string | null;
+            highlight?: string | null;
+            tabs?:
+              | {
+                  /**
+                   * Unique key, must match a "contents" entry's Tab ID below
+                   */
+                  id: string;
+                  num?: string | null;
+                  label: string;
+                }[]
+              | null;
+            contents?:
+              | {
+                  /**
+                   * Must match one of the tab IDs above
+                   */
+                  tabId: string;
+                  type: 'bullet' | 'bulletWithLabels' | 'table';
+                  bulletItems?: string[] | null;
+                  labeledItems?:
+                    | {
+                        label: string;
+                        text: string;
+                        id?: string | null;
+                      }[]
+                    | null;
+                  tableHeaders?: string[] | null;
+                  tableRows?:
+                    | {
+                        cells?: string[] | null;
+                        id?: string | null;
+                      }[]
+                    | null;
+                  id?: string | null;
+                }[]
+              | null;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'programDetails';
+          }
+        | {
+            header?: {
+              label?: string | null;
+              title?: string | null;
+              highlight?: string | null;
+              para?: string | null;
+            };
+            jobs?:
+              | {
+                  title: string;
+                  /**
+                   * e.g. salary range
+                   */
+                  range?: string | null;
+                  id?: string | null;
+                }[]
+              | null;
+            stats?:
+              | {
+                  gradient?: boolean | null;
+                  number: string;
+                  label: string;
+                  id?: string | null;
+                }[]
+              | null;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'careers';
+          }
+        | {
+            header?: {
+              label?: string | null;
+              title?: string | null;
+              highlight?: string | null;
+              para?: string | null;
+            };
+            items?:
+              | {
+                  n?: string | null;
+                  title: string;
+                  desc?: string | null;
+                  id?: string | null;
+                }[]
+              | null;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'whyStudy';
+          }
+        | {
+            title?: string | null;
+            highlight?: string | null;
+            subtitle?: string | null;
+            logos1?: string[] | null;
+            logos2?: string[] | null;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'recruiters';
+          }
+      )[]
+    | null;
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
 export interface PayloadKv {
@@ -192,6 +486,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'media';
         value: string | Media;
+      } | null)
+    | ({
+        relationTo: 'courses';
+        value: string | Course;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -274,6 +572,273 @@ export interface MediaSelect<T extends boolean = true> {
   height?: T;
   focalX?: T;
   focalY?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "courses_select".
+ */
+export interface CoursesSelect<T extends boolean = true> {
+  title?: T;
+  slug?: T;
+  program?: T;
+  school?: T;
+  status?: T;
+  sections?:
+    | T
+    | {
+        hero?:
+          | T
+          | {
+              breadcrumb?:
+                | T
+                | {
+                    currentRoute?: T;
+                  };
+              badge?: T;
+              title?: T;
+              highlight?: T;
+              description?: T;
+              chips?:
+                | T
+                | {
+                    strong?: T;
+                    label?: T;
+                    id?: T;
+                  };
+              buttons?:
+                | T
+                | {
+                    variant?: T;
+                    icon?: T;
+                    label?: T;
+                    id?: T;
+                  };
+              id?: T;
+              blockName?: T;
+            };
+        overview?:
+          | T
+          | {
+              imageCard?:
+                | T
+                | {
+                    changeDesign?: T;
+                    title?: T;
+                    highlight?: T;
+                    image?: T;
+                  };
+              header?:
+                | T
+                | {
+                    label?: T;
+                    title?: T;
+                    highlight?: T;
+                  };
+              description1?: T;
+              description2?: T;
+              quote?: T;
+              table?:
+                | T
+                | {
+                    headers?: T;
+                    rows?:
+                      | T
+                      | {
+                          program?: T;
+                          duration?: T;
+                          eligibility?: T;
+                          id?: T;
+                        };
+                  };
+              id?: T;
+              blockName?: T;
+            };
+        coursesGrid?:
+          | T
+          | {
+              header?:
+                | T
+                | {
+                    label?: T;
+                    title?: T;
+                    highlight?: T;
+                    para?: T;
+                  };
+              cards?:
+                | T
+                | {
+                    title?: T;
+                    desc?: T;
+                    pills?: T;
+                    id?: T;
+                  };
+              extraCard?:
+                | T
+                | {
+                    title?: T;
+                    description?: T;
+                  };
+              coreTags?: T;
+              id?: T;
+              blockName?: T;
+            };
+        aiSection?:
+          | T
+          | {
+              image?:
+                | T
+                | {
+                    placeholder?: T;
+                    photo?: T;
+                  };
+              header?:
+                | T
+                | {
+                    label?: T;
+                    title?: T;
+                    highlight?: T;
+                    para?: T;
+                  };
+              tags?: T;
+              roadmap?:
+                | T
+                | {
+                    num?: T;
+                    title?: T;
+                    desc?: T;
+                    id?: T;
+                  };
+              id?: T;
+              blockName?: T;
+            };
+        certifications?:
+          | T
+          | {
+              header?:
+                | T
+                | {
+                    label?: T;
+                    title?: T;
+                    highlight?: T;
+                    para?: T;
+                  };
+              certificationAssociations?:
+                | T
+                | {
+                    isMain?: T;
+                    badge?: T;
+                    name?: T;
+                    desc?: T;
+                    id?: T;
+                  };
+              handsOnItems?: T;
+              id?: T;
+              blockName?: T;
+            };
+        programDetails?:
+          | T
+          | {
+              badge?: T;
+              title?: T;
+              highlight?: T;
+              tabs?:
+                | T
+                | {
+                    id?: T;
+                    num?: T;
+                    label?: T;
+                  };
+              contents?:
+                | T
+                | {
+                    tabId?: T;
+                    type?: T;
+                    bulletItems?: T;
+                    labeledItems?:
+                      | T
+                      | {
+                          label?: T;
+                          text?: T;
+                          id?: T;
+                        };
+                    tableHeaders?: T;
+                    tableRows?:
+                      | T
+                      | {
+                          cells?: T;
+                          id?: T;
+                        };
+                    id?: T;
+                  };
+              id?: T;
+              blockName?: T;
+            };
+        careers?:
+          | T
+          | {
+              header?:
+                | T
+                | {
+                    label?: T;
+                    title?: T;
+                    highlight?: T;
+                    para?: T;
+                  };
+              jobs?:
+                | T
+                | {
+                    title?: T;
+                    range?: T;
+                    id?: T;
+                  };
+              stats?:
+                | T
+                | {
+                    gradient?: T;
+                    number?: T;
+                    label?: T;
+                    id?: T;
+                  };
+              id?: T;
+              blockName?: T;
+            };
+        whyStudy?:
+          | T
+          | {
+              header?:
+                | T
+                | {
+                    label?: T;
+                    title?: T;
+                    highlight?: T;
+                    para?: T;
+                  };
+              items?:
+                | T
+                | {
+                    n?: T;
+                    title?: T;
+                    desc?: T;
+                    id?: T;
+                  };
+              id?: T;
+              blockName?: T;
+            };
+        recruiters?:
+          | T
+          | {
+              title?: T;
+              highlight?: T;
+              subtitle?: T;
+              logos1?: T;
+              logos2?: T;
+              id?: T;
+              blockName?: T;
+            };
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  _status?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
