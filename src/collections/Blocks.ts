@@ -39,6 +39,22 @@ export const HeroBlock: Block = {
     { name: 'highlight', type: 'text' },
     { name: 'description', type: 'textarea', required: true },
     {
+      name: 'image',
+      type: 'text',
+      label: 'Background image URL',
+      admin: {
+        description:
+          'Full-bleed hero background photo, rendered under the existing gradient tint. Takes priority over the upload field below. Leave both empty for gradient-only (current default look).',
+      },
+    },
+    {
+      name: 'photo',
+      type: 'upload',
+      relationTo: 'media',
+      label: 'Background image upload',
+      admin: { description: 'Upload a hero background photo — only used if the Background image URL above is empty.' },
+    },
+    {
       name: 'chips',
       type: 'array',
       label: 'Quick stat chips',
@@ -51,10 +67,6 @@ export const HeroBlock: Block = {
       name: 'buttons',
       type: 'array',
       label: 'CTA buttons',
-      admin: {
-        description:
-          'NOTE: the current skeleton code does not read a url/href for these buttons — ask your dev where the link destination comes from before relying on this.',
-      },
       fields: [
         {
           name: 'variant',
@@ -73,6 +85,17 @@ export const HeroBlock: Block = {
         },
         { name: 'icon', type: 'text', admin: { description: 'e.g. "IoCall" — must match an icon name the component recognizes' } },
         { name: 'label', type: 'text', required: true },
+        {
+          name: 'url',
+          type: 'text',
+          label: 'Link URL',
+          admin: { description: 'e.g. "/apply-now" or "https://tulas.edu.in/contact". Leave empty for a non-functional button.' },
+        },
+        {
+          name: 'openInNewTab',
+          type: 'checkbox',
+          label: 'Open in new tab',
+        },
       ],
     },
   ],
@@ -90,10 +113,16 @@ export const OverviewBlock: Block = {
         { name: 'title', type: 'text' },
         { name: 'highlight', type: 'textarea', admin: { description: 'Use line breaks for multi-line highlight text' } },
         {
+          name: 'imageUrl',
+          type: 'text',
+          label: 'Photo URL',
+          admin: { description: 'Photo shown in this card. Takes priority over the upload field below. Leave both empty and the card shows without a photo.' },
+        },
+        {
           name: 'image',
           type: 'upload',
           relationTo: 'media',
-          admin: { description: 'Photo shown in this card. Leave empty and the card shows without a photo.' },
+          admin: { description: 'Optional photo upload — only used if the Photo URL above is empty.' },
         },
       ],
     },
@@ -162,12 +191,19 @@ export const AISectionBlock: Block = {
       name: 'image',
       type: 'group',
       fields: [
-        { name: 'placeholder', type: 'textarea', admin: { description: 'Multi-line placeholder text shown inside the visual block (used only if no photo is uploaded below)' } },
+        { name: 'placeholder', type: 'textarea', admin: { description: 'Multi-line placeholder text shown inside the visual block (used only if no photo URL/upload is set below)' } },
+        {
+          name: 'url',
+          type: 'text',
+          label: 'Photo URL',
+          admin: { description: 'Real photo — if set, replaces the placeholder box with this image. Takes priority over the upload field below.' },
+        },
+        { name: 'alt', type: 'text', label: 'Photo alt text' },
         {
           name: 'photo',
           type: 'upload',
           relationTo: 'media',
-          admin: { description: 'Optional real photo — if set, replaces the placeholder box with this image' },
+          admin: { description: 'Optional real photo upload — only used if the Photo URL above is empty' },
         },
       ],
     },

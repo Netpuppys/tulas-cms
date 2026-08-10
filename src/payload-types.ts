@@ -70,6 +70,7 @@ export interface Config {
     users: User;
     media: Media;
     courses: Course;
+    'fee-structures': FeeStructure;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -80,6 +81,7 @@ export interface Config {
     users: UsersSelect<false> | UsersSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     courses: CoursesSelect<false> | CoursesSelect<true>;
+    'fee-structures': FeeStructuresSelect<false> | FeeStructuresSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -193,6 +195,14 @@ export interface Course {
             title: string;
             highlight?: string | null;
             description: string;
+            /**
+             * Full-bleed hero background photo, rendered under the existing gradient tint. Takes priority over the upload field below. Leave both empty for gradient-only (current default look).
+             */
+            image?: string | null;
+            /**
+             * Upload a hero background photo — only used if the Background image URL above is empty.
+             */
+            photo?: (string | null) | Media;
             chips?:
               | {
                   strong?: string | null;
@@ -200,9 +210,6 @@ export interface Course {
                   id?: string | null;
                 }[]
               | null;
-            /**
-             * NOTE: the current skeleton code does not read a url/href for these buttons — ask your dev where the link destination comes from before relying on this.
-             */
             buttons?:
               | {
                   /**
@@ -224,6 +231,11 @@ export interface Course {
                    */
                   icon?: string | null;
                   label: string;
+                  /**
+                   * e.g. "/apply-now" or "https://tulas.edu.in/contact". Leave empty for a non-functional button.
+                   */
+                  url?: string | null;
+                  openInNewTab?: boolean | null;
                   id?: string | null;
                 }[]
               | null;
@@ -240,7 +252,11 @@ export interface Course {
                */
               highlight?: string | null;
               /**
-               * Photo shown in this card. Leave empty and the card shows without a photo.
+               * Photo shown in this card. Takes priority over the upload field below. Leave both empty and the card shows without a photo.
+               */
+              imageUrl?: string | null;
+              /**
+               * Optional photo upload — only used if the Photo URL above is empty.
                */
               image?: (string | null) | Media;
             };
@@ -297,11 +313,16 @@ export interface Course {
         | {
             image?: {
               /**
-               * Multi-line placeholder text shown inside the visual block (used only if no photo is uploaded below)
+               * Multi-line placeholder text shown inside the visual block (used only if no photo URL/upload is set below)
                */
               placeholder?: string | null;
               /**
-               * Optional real photo — if set, replaces the placeholder box with this image
+               * Real photo — if set, replaces the placeholder box with this image. Takes priority over the upload field below.
+               */
+              url?: string | null;
+              alt?: string | null;
+              /**
+               * Optional real photo upload — only used if the Photo URL above is empty
                */
               photo?: (string | null) | Media;
             };
@@ -456,6 +477,60 @@ export interface Course {
   _status?: ('draft' | 'published') | null;
 }
 /**
+ * Fee tables shown on the /tulas-programs catalog page. The "Key" field must exactly match a feesKey in programs-data.js for it to connect to the right program.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "fee-structures".
+ */
+export interface FeeStructure {
+  id: string;
+  /**
+   * Must exactly match a feesKey in tulas_rev/src/lib/data/programs-data.js, e.g. "BBA" or "MBA-Specialization".
+   */
+  key: string;
+  /**
+   * Friendly name shown in this admin list, e.g. "BBA (General)".
+   */
+  label: string;
+  /**
+   * e.g. "Per annum · Scholarship based on 12th aggregate %"
+   */
+  note?: string | null;
+  /**
+   * Turn on for programs like Integrated Law / LL.B that have one fixed fee instead of scholarship brackets.
+   */
+  flat?: boolean | null;
+  flatRows?:
+    | {
+        prog: string;
+        fee: number;
+        id?: string | null;
+      }[]
+    | null;
+  tieredRows?:
+    | {
+        prog: string;
+        allIndia: {
+          noScholarship: number;
+          s91: number;
+          s81: number;
+          s71: number;
+          s60: number;
+        };
+        uttarakhand: {
+          noScholarship: number;
+          s91: number;
+          s81: number;
+          s71: number;
+          s60: number;
+        };
+        id?: string | null;
+      }[]
+    | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
@@ -490,6 +565,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'courses';
         value: string | Course;
+      } | null)
+    | ({
+        relationTo: 'fee-structures';
+        value: string | FeeStructure;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -598,6 +677,8 @@ export interface CoursesSelect<T extends boolean = true> {
               title?: T;
               highlight?: T;
               description?: T;
+              image?: T;
+              photo?: T;
               chips?:
                 | T
                 | {
@@ -611,6 +692,8 @@ export interface CoursesSelect<T extends boolean = true> {
                     variant?: T;
                     icon?: T;
                     label?: T;
+                    url?: T;
+                    openInNewTab?: T;
                     id?: T;
                   };
               id?: T;
@@ -625,6 +708,7 @@ export interface CoursesSelect<T extends boolean = true> {
                     changeDesign?: T;
                     title?: T;
                     highlight?: T;
+                    imageUrl?: T;
                     image?: T;
                   };
               header?:
@@ -689,6 +773,8 @@ export interface CoursesSelect<T extends boolean = true> {
                 | T
                 | {
                     placeholder?: T;
+                    url?: T;
+                    alt?: T;
                     photo?: T;
                   };
               header?:
@@ -839,6 +925,49 @@ export interface CoursesSelect<T extends boolean = true> {
   updatedAt?: T;
   createdAt?: T;
   _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "fee-structures_select".
+ */
+export interface FeeStructuresSelect<T extends boolean = true> {
+  key?: T;
+  label?: T;
+  note?: T;
+  flat?: T;
+  flatRows?:
+    | T
+    | {
+        prog?: T;
+        fee?: T;
+        id?: T;
+      };
+  tieredRows?:
+    | T
+    | {
+        prog?: T;
+        allIndia?:
+          | T
+          | {
+              noScholarship?: T;
+              s91?: T;
+              s81?: T;
+              s71?: T;
+              s60?: T;
+            };
+        uttarakhand?:
+          | T
+          | {
+              noScholarship?: T;
+              s91?: T;
+              s81?: T;
+              s71?: T;
+              s60?: T;
+            };
+        id?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
