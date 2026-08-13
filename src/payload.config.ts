@@ -10,6 +10,7 @@ import { Users } from './collections/Users'
 import { Media } from './collections/Media'
 import { Courses } from './collections/Courses'
 import { FeeStructures } from './collections/FeeStructures'
+import { Articles } from './collections/Articles'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -44,7 +45,7 @@ admin: {
     baseDir: path.resolve(dirname),
   },
 },
-  collections: [Users, Media, Courses, FeeStructures],
+  collections: [Users, Media, Courses, FeeStructures, Articles],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',
   typescript: {

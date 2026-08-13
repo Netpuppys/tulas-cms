@@ -71,6 +71,7 @@ export interface Config {
     media: Media;
     courses: Course;
     'fee-structures': FeeStructure;
+    articles: Article;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -82,6 +83,7 @@ export interface Config {
     media: MediaSelect<false> | MediaSelect<true>;
     courses: CoursesSelect<false> | CoursesSelect<true>;
     'fee-structures': FeeStructuresSelect<false> | FeeStructuresSelect<true>;
+    articles: ArticlesSelect<false> | ArticlesSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -531,6 +533,68 @@ export interface FeeStructure {
   createdAt: string;
 }
 /**
+ * News articles for the /media page. At most one article should be set to each Hero Position (Large / Small 1 / Small 2) at a time — the rest should be "None" and will show in the regular feed.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "articles".
+ */
+export interface Article {
+  id: string;
+  title: string;
+  /**
+   * URL path, e.g. "pinaak-2026-cultural-fest" — used as /media/<slug>
+   */
+  slug: string;
+  /**
+   * e.g. "DBUU Events", "Awards", "Academics"
+   */
+  category?: string | null;
+  author?: string | null;
+  publishedDate: string;
+  /**
+   * Manual, not auto-calculated — e.g. "4 min read". Leave empty to hide.
+   */
+  readTime?: string | null;
+  /**
+   * Takes priority over the upload field below. Leave both empty and the card shows without a photo.
+   */
+  imageUrl?: string | null;
+  /**
+   * Only used if the Photo URL above is empty.
+   */
+  image?: (string | null) | Media;
+  /**
+   * Short summary shown on article cards and at the top of the article.
+   */
+  excerpt: string;
+  /**
+   * Full article content.
+   */
+  body: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  };
+  /**
+   * Only one published article at a time can hold each hero position — enforced automatically.
+   */
+  heroPosition?: ('none' | 'large' | 'small-1' | 'small-2') | null;
+  status?: ('draft' | 'published') | null;
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
@@ -569,6 +633,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'fee-structures';
         value: string | FeeStructure;
+      } | null)
+    | ({
+        relationTo: 'articles';
+        value: string | Article;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -968,6 +1036,27 @@ export interface FeeStructuresSelect<T extends boolean = true> {
       };
   updatedAt?: T;
   createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "articles_select".
+ */
+export interface ArticlesSelect<T extends boolean = true> {
+  title?: T;
+  slug?: T;
+  category?: T;
+  author?: T;
+  publishedDate?: T;
+  readTime?: T;
+  imageUrl?: T;
+  image?: T;
+  excerpt?: T;
+  body?: T;
+  heroPosition?: T;
+  status?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  _status?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
