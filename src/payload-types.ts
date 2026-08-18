@@ -72,6 +72,8 @@ export interface Config {
     courses: Course;
     'fee-structures': FeeStructure;
     articles: Article;
+    placements: Placement;
+    'placement-hero': PlacementHero;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -84,6 +86,8 @@ export interface Config {
     courses: CoursesSelect<false> | CoursesSelect<true>;
     'fee-structures': FeeStructuresSelect<false> | FeeStructuresSelect<true>;
     articles: ArticlesSelect<false> | ArticlesSelect<true>;
+    placements: PlacementsSelect<false> | PlacementsSelect<true>;
+    'placement-hero': PlacementHeroSelect<false> | PlacementHeroSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -586,9 +590,152 @@ export interface Article {
     [k: string]: unknown;
   };
   /**
+   * Photos of newspaper clippings / press coverage for this story — shown as a slider on the article page. Leave empty to hide the gallery entirely.
+   */
+  newspaperGallery?:
+    | {
+        /**
+         * Takes priority over the upload field below.
+         */
+        imageUrl?: string | null;
+        /**
+         * Only used if the Photo URL above is empty.
+         */
+        image?: (string | null) | Media;
+        caption?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Other sites that republished or covered this same story (e.g. NDTV, Times of India) — shown as "More from DevBhoomi Times" cards on this article's page. Scoped to this article only, not shared site-wide.
+   */
+  externalCoverage?:
+    | {
+        /**
+         * e.g. "NDTV" or the external headline used there.
+         */
+        title: string;
+        /**
+         * Takes priority over the upload field below.
+         */
+        imageUrl?: string | null;
+        /**
+         * Only used if the Photo URL above is empty. Falls back to this article's own photo if both are empty.
+         */
+        image?: (string | null) | Media;
+        link: string;
+        linkLabel?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
    * Only one published article at a time can hold each hero position — enforced automatically.
    */
   heroPosition?: ('none' | 'large' | 'small-1' | 'small-2') | null;
+  status?: ('draft' | 'published') | null;
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+}
+/**
+ * One record per placed student. Shown in the course sections on /placement and the Tier 1 / Tier 2 / Popular / Normal breakdown on each course's "View All Placements" page.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "placements".
+ */
+export interface Placement {
+  id: string;
+  studentName: string;
+  /**
+   * Takes priority over the upload field below.
+   */
+  imageUrl?: string | null;
+  /**
+   * Only used if the Photo URL above is empty.
+   */
+  image?: (string | null) | Media;
+  /**
+   * Which of the 9 placement course sections this student appears under.
+   */
+  course: 'btech-cse' | 'btech-core' | 'bba' | 'bca' | 'bcom' | 'mba' | 'bsc-agriculture' | 'bajmc' | 'mca';
+  /**
+   * Recruiting company, e.g. "TCS".
+   */
+  company: string;
+  /**
+   * Takes priority over the upload field below.
+   */
+  companyLogoUrl?: string | null;
+  /**
+   * Only used if the Company Logo URL above is empty.
+   */
+  companyLogo?: (string | null) | Media;
+  /**
+   * e.g. "44 LPA"
+   */
+  package: string;
+  /**
+   * e.g. "Software Dev Engineer". Optional.
+   */
+  designation?: string | null;
+  /**
+   * e.g. "Class of 2026". Optional.
+   */
+  batch?: string | null;
+  /**
+   * Tier 1 / Tier 2 / Popular each show up to 5 students on the course's inner page; Normal shows every remaining placement with no cap.
+   */
+  tier: 'tier-1' | 'tier-2' | 'popular' | 'normal';
+  status?: ('draft' | 'published') | null;
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+}
+/**
+ * Curated spotlight cards for the sliding hero banner at the top of /placement. Independent of the Placements collection below.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "placement-hero".
+ */
+export interface PlacementHero {
+  id: string;
+  studentName: string;
+  /**
+   * Takes priority over the upload field below.
+   */
+  imageUrl?: string | null;
+  /**
+   * Only used if the Photo URL above is empty.
+   */
+  image?: (string | null) | Media;
+  /**
+   * Short blurb shown on the hero card, e.g. role + a line about the achievement.
+   */
+  content: string;
+  /**
+   * e.g. "44 LPA". Optional.
+   */
+  package?: string | null;
+  /**
+   * e.g. "Software Dev Engineer". Optional.
+   */
+  designation?: string | null;
+  /**
+   * e.g. "Class of 2026". Optional.
+   */
+  batch?: string | null;
+  /**
+   * Takes priority over the upload field below.
+   */
+  companyLogoUrl?: string | null;
+  /**
+   * Only used if the Company Logo URL above is empty.
+   */
+  companyLogo?: (string | null) | Media;
+  /**
+   * Slide order, lowest first. Cards with the same number fall back to newest first.
+   */
+  order?: number | null;
   status?: ('draft' | 'published') | null;
   updatedAt: string;
   createdAt: string;
@@ -637,6 +784,14 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'articles';
         value: string | Article;
+      } | null)
+    | ({
+        relationTo: 'placements';
+        value: string | Placement;
+      } | null)
+    | ({
+        relationTo: 'placement-hero';
+        value: string | PlacementHero;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -1052,7 +1207,66 @@ export interface ArticlesSelect<T extends boolean = true> {
   image?: T;
   excerpt?: T;
   body?: T;
+  newspaperGallery?:
+    | T
+    | {
+        imageUrl?: T;
+        image?: T;
+        caption?: T;
+        id?: T;
+      };
+  externalCoverage?:
+    | T
+    | {
+        title?: T;
+        imageUrl?: T;
+        image?: T;
+        link?: T;
+        linkLabel?: T;
+        id?: T;
+      };
   heroPosition?: T;
+  status?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "placements_select".
+ */
+export interface PlacementsSelect<T extends boolean = true> {
+  studentName?: T;
+  imageUrl?: T;
+  image?: T;
+  course?: T;
+  company?: T;
+  companyLogoUrl?: T;
+  companyLogo?: T;
+  package?: T;
+  designation?: T;
+  batch?: T;
+  tier?: T;
+  status?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "placement-hero_select".
+ */
+export interface PlacementHeroSelect<T extends boolean = true> {
+  studentName?: T;
+  imageUrl?: T;
+  image?: T;
+  content?: T;
+  package?: T;
+  designation?: T;
+  batch?: T;
+  companyLogoUrl?: T;
+  companyLogo?: T;
+  order?: T;
   status?: T;
   updatedAt?: T;
   createdAt?: T;

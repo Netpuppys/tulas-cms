@@ -74,6 +74,73 @@ export const Articles: CollectionConfig = {
       admin: { description: 'Full article content.' },
     },
     {
+      name: 'newspaperGallery',
+      type: 'array',
+      label: 'Newspaper Gallery',
+      admin: {
+        description:
+          'Photos of newspaper clippings / press coverage for this story — shown as a slider on the article page. Leave empty to hide the gallery entirely.',
+      },
+      fields: [
+        {
+          name: 'imageUrl',
+          type: 'text',
+          label: 'Photo URL',
+          admin: { description: 'Takes priority over the upload field below.' },
+        },
+        {
+          name: 'image',
+          type: 'upload',
+          relationTo: 'media',
+          label: 'Photo upload',
+          admin: { description: 'Only used if the Photo URL above is empty.' },
+        },
+        { name: 'caption', type: 'text' },
+      ],
+    },
+    {
+      name: 'externalCoverage',
+      type: 'array',
+      label: 'Also Published On',
+      admin: {
+        description:
+          'Other sites that republished or covered this same story (e.g. NDTV, Times of India) — shown as "More from DevBhoomi Times" cards on this article\'s page. Scoped to this article only, not shared site-wide.',
+      },
+      fields: [
+        {
+          name: 'title',
+          type: 'text',
+          required: true,
+          admin: { description: 'e.g. "NDTV" or the external headline used there.' },
+        },
+        {
+          name: 'imageUrl',
+          type: 'text',
+          label: 'Photo URL',
+          admin: { description: 'Takes priority over the upload field below.' },
+        },
+        {
+          name: 'image',
+          type: 'upload',
+          relationTo: 'media',
+          label: 'Photo upload',
+          admin: { description: 'Only used if the Photo URL above is empty. Falls back to this article\'s own photo if both are empty.' },
+        },
+        {
+          name: 'link',
+          type: 'text',
+          required: true,
+          label: 'External URL',
+        },
+        {
+          name: 'linkLabel',
+          type: 'text',
+          label: 'Button Text',
+          defaultValue: 'Read',
+        },
+      ],
+    },
+    {
       name: 'heroPosition',
       type: 'select',
       defaultValue: 'none',
