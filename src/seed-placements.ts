@@ -76,6 +76,56 @@ const heroCards = [
   { studentName: 'Anjali Verma', imageUrl: photo(3), content: 'Landed a Business Analyst role at Accenture — MBA, Class of 2026.', package: '9 LPA', designation: 'Business Analyst', batch: 'Class of 2026', companyLogoUrl: logo(8), order: 3 },
 ]
 
+// "Our Trendsetters" — students who received offers from multiple
+// companies, each shown as one card with a stacked logo+package row per
+// offer.
+const trendsetters = [
+  {
+    studentName: 'Ananya Roy',
+    imageUrl: photo(3),
+    program: 'B.Tech CSE',
+    tagline: 'Weighed three offers before choosing her role at TCS.',
+    offers: [
+      { companyName: 'TCS', companyLogoUrl: logo(3), package: '7 LPA' },
+      { companyName: 'Infosys', companyLogoUrl: logo(4), package: '6.5 LPA' },
+      { companyName: 'Wipro', companyLogoUrl: logo(5), package: '5 LPA' },
+    ],
+  },
+  {
+    studentName: 'Aman Verma',
+    imageUrl: photo(4),
+    program: 'B.Tech CSE',
+    tagline: 'Received offers across three top recruiters this season.',
+    offers: [
+      { companyName: 'Amazon', companyLogoUrl: logo(1), package: '18 LPA' },
+      { companyName: 'Cognizant', companyLogoUrl: logo(2), package: '4.5 LPA' },
+      { companyName: 'Capgemini', companyLogoUrl: logo(3), package: '4 LPA' },
+    ],
+  },
+  {
+    studentName: 'Priya Sharma',
+    imageUrl: photo(5),
+    program: 'MCA',
+    tagline: 'Picked HDFC Bank after three management-track offers.',
+    offers: [
+      { companyName: 'HDFC Bank', companyLogoUrl: logo(9), package: '6 LPA' },
+      { companyName: 'ICICI Bank', companyLogoUrl: logo(10), package: '5 LPA' },
+      { companyName: 'Genpact', companyLogoUrl: logo(6), package: '5 LPA' },
+    ],
+  },
+  {
+    studentName: 'Vikas Singh',
+    imageUrl: photo(1),
+    program: 'B.Tech Core Branches',
+    tagline: 'Fielded offers from three core-engineering recruiters.',
+    offers: [
+      { companyName: 'L&T', companyLogoUrl: logo(6), package: '8 LPA' },
+      { companyName: 'Tata Motors', companyLogoUrl: logo(7), package: '6 LPA' },
+      { companyName: 'BHEL', companyLogoUrl: logo(8), package: '4.5 LPA' },
+    ],
+  },
+]
+
 // Atlas shared-tier clusters occasionally throw transient errors on write:
 //  - code 112 / "catalog changes": a brand-new `_versions` collection is
 //    still being created while writes are already landing.
@@ -166,11 +216,39 @@ async function seed() {
     }
   }
 
+  let createdTrendsetters = 0
+  let skippedTrendsetters = 0
+  const failedTrendsetters = []
+  for (const t of trendsetters) {
+    const existing = await payload.find({
+      collection: 'trendsetters',
+      where: { studentName: { equals: t.studentName } },
+      limit: 1,
+    })
+    if (existing.docs.length > 0) {
+      skippedTrendsetters++
+      continue
+    }
+    try {
+      await createWithRetry(payload, {
+        collection: 'trendsetters',
+        data: { ...t, status: 'published' },
+      })
+      createdTrendsetters++
+    } catch (err) {
+      console.error(`Failed to create trendsetter "${t.studentName}":`, err?.message || err)
+      failedTrendsetters.push(t.studentName)
+    }
+  }
+
   console.log(
     `Placements: created ${createdPlacements}, skipped ${skippedPlacements} (already existed)${failedPlacements.length ? `, failed ${failedPlacements.length} (${failedPlacements.join(', ')}) — just re-run the script, it'll pick up where it left off` : ''}.`,
   )
   console.log(
     `Placement Hero: created ${createdHero}, skipped ${skippedHero} (already existed)${failedHero.length ? `, failed ${failedHero.length} (${failedHero.join(', ')}) — just re-run the script` : ''}.`,
+  )
+  console.log(
+    `Trendsetters: created ${createdTrendsetters}, skipped ${skippedTrendsetters} (already existed)${failedTrendsetters.length ? `, failed ${failedTrendsetters.length} (${failedTrendsetters.join(', ')}) — just re-run the script` : ''}.`,
   )
   process.exit(0)
 }

@@ -74,6 +74,7 @@ export interface Config {
     articles: Article;
     placements: Placement;
     'placement-hero': PlacementHero;
+    trendsetters: Trendsetter;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -88,6 +89,7 @@ export interface Config {
     articles: ArticlesSelect<false> | ArticlesSelect<true>;
     placements: PlacementsSelect<false> | PlacementsSelect<true>;
     'placement-hero': PlacementHeroSelect<false> | PlacementHeroSelect<true>;
+    trendsetters: TrendsettersSelect<false> | TrendsettersSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -191,6 +193,33 @@ export interface Course {
    */
   school?: string | null;
   status?: ('draft' | 'published') | null;
+  /**
+   * Which tab (Undergraduate / Postgraduate / Diploma) this course appears under in the header menu.
+   */
+  level: 'undergraduate' | 'postgraduate' | 'diploma';
+  /**
+   * Which department column this course is grouped under in the header menu. This is a display/UX grouping only — it does not need to match the "school" field above exactly.
+   */
+  department:
+    | 'School Of Management & Commerce'
+    | 'School Of Engineering'
+    | 'School Of Computer Applications'
+    | 'School Of Mass Comm. & Journalism'
+    | 'School Of Pharmacy'
+    | 'School Of Law'
+    | 'School Of Agriculture';
+  /**
+   * Short label shown in the header menu, e.g. "B.Tech CSE". Falls back to the Course title above if left empty.
+   */
+  navLabel?: string | null;
+  /**
+   * Turn off to publish this course page without listing it in the header "Programmes" menu (e.g. a duplicate or legacy entry).
+   */
+  showInNav?: boolean | null;
+  /**
+   * Controls ordering within its department in the header menu — lower numbers first. Courses with the same number fall back to alphabetical.
+   */
+  navOrder?: number | null;
   sections?:
     | (
         | {
@@ -742,6 +771,57 @@ export interface PlacementHero {
   _status?: ('draft' | 'published') | null;
 }
 /**
+ * Students with multiple offers, shown in the "Our Trendsetters" section on /placement. Add one "Company Offers" entry per offer they received — the design expects about 3 per student.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "trendsetters".
+ */
+export interface Trendsetter {
+  id: string;
+  studentName: string;
+  /**
+   * Takes priority over the upload field below.
+   */
+  imageUrl?: string | null;
+  /**
+   * Only used if the Photo URL above is empty.
+   */
+  image?: (string | null) | Media;
+  /**
+   * e.g. "B.Tech CSE" — shown as a badge on the photo.
+   */
+  program?: string | null;
+  /**
+   * Short line shown under the student's name on the photo. Optional.
+   */
+  tagline?: string | null;
+  /**
+   * One entry per company that made this student an offer. Shown as stacked logo + package rows — the design expects about 3.
+   */
+  offers?:
+    | {
+        companyName?: string | null;
+        /**
+         * Takes priority over the upload field below.
+         */
+        companyLogoUrl?: string | null;
+        /**
+         * Only used if the Company Logo URL above is empty.
+         */
+        companyLogo?: (string | null) | Media;
+        /**
+         * e.g. "12 LPA"
+         */
+        package?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  status?: ('draft' | 'published') | null;
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
@@ -792,6 +872,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'placement-hero';
         value: string | PlacementHero;
+      } | null)
+    | ({
+        relationTo: 'trendsetters';
+        value: string | Trendsetter;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -885,6 +969,11 @@ export interface CoursesSelect<T extends boolean = true> {
   program?: T;
   school?: T;
   status?: T;
+  level?: T;
+  department?: T;
+  navLabel?: T;
+  showInNav?: T;
+  navOrder?: T;
   sections?:
     | T
     | {
@@ -1267,6 +1356,30 @@ export interface PlacementHeroSelect<T extends boolean = true> {
   companyLogoUrl?: T;
   companyLogo?: T;
   order?: T;
+  status?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "trendsetters_select".
+ */
+export interface TrendsettersSelect<T extends boolean = true> {
+  studentName?: T;
+  imageUrl?: T;
+  image?: T;
+  program?: T;
+  tagline?: T;
+  offers?:
+    | T
+    | {
+        companyName?: T;
+        companyLogoUrl?: T;
+        companyLogo?: T;
+        package?: T;
+        id?: T;
+      };
   status?: T;
   updatedAt?: T;
   createdAt?: T;
