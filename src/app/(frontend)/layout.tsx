@@ -11,7 +11,7 @@ export default async function RootLayout(props: { children: React.ReactNode }) {
 
   return (
     <html lang="en">
-      <body>
+      <body className="bg-white text-black antialiased">
         <main>{children}</main>
       </body>
     </html>
