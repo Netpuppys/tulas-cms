@@ -248,9 +248,10 @@ export const CertificationsBlock: Block = {
   ],
 }
 
-// NOTE: In code, `contents` is an object keyed by tab id (contents[activeTab]).
-// Here it's a flat array with a tabId field instead — the component will need
-// contents.find(c => c.tabId === activeTab) rather than a key lookup.
+// Each tab carries its own content directly — no more matching a separate
+// "contents" entry to a tab by a hand-typed ID. Payload gives every array
+// row its own internal id automatically, which is what the frontend keys
+// off of now, so there's nothing for an editor to type or keep in sync.
 export const ProgramDetailsBlock: Block = {
   slug: 'programDetails',
   labels: { singular: 'Program Details (Tabs)', plural: 'Program Details' },
@@ -262,22 +263,15 @@ export const ProgramDetailsBlock: Block = {
       name: 'tabs',
       type: 'array',
       minRows: 1,
+      labels: { singular: 'Tab', plural: 'Tabs' },
       fields: [
-        { name: 'id', type: 'text', required: true, admin: { description: 'Unique key, must match a "contents" entry\'s Tab ID below' } },
-        { name: 'num', type: 'text' },
+        { name: 'num', type: 'text', admin: { description: 'e.g. "01" — shown as a small badge next to the tab label.' } },
         { name: 'label', type: 'text', required: true },
-      ],
-    },
-    {
-      name: 'contents',
-      type: 'array',
-      minRows: 1,
-      fields: [
-        { name: 'tabId', type: 'text', required: true, admin: { description: 'Must match one of the tab IDs above' } },
         {
           name: 'type',
           type: 'select',
           required: true,
+          label: 'Content type',
           options: [
             { label: 'Bullet list', value: 'bullet' },
             { label: 'Bullet list with labels', value: 'bulletWithLabels' },

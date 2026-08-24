@@ -75,6 +75,7 @@ export interface Config {
     placements: Placement;
     'placement-hero': PlacementHero;
     trendsetters: Trendsetter;
+    'academic-notifications': AcademicNotification;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -90,6 +91,7 @@ export interface Config {
     placements: PlacementsSelect<false> | PlacementsSelect<true>;
     'placement-hero': PlacementHeroSelect<false> | PlacementHeroSelect<true>;
     trendsetters: TrendsettersSelect<false> | TrendsettersSelect<true>;
+    'academic-notifications': AcademicNotificationsSelect<false> | AcademicNotificationsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -411,19 +413,10 @@ export interface Course {
             tabs?:
               | {
                   /**
-                   * Unique key, must match a "contents" entry's Tab ID below
+                   * e.g. "01" — shown as a small badge next to the tab label.
                    */
-                  id: string;
                   num?: string | null;
                   label: string;
-                }[]
-              | null;
-            contents?:
-              | {
-                  /**
-                   * Must match one of the tab IDs above
-                   */
-                  tabId: string;
                   type: 'bullet' | 'bulletWithLabels' | 'table';
                   bulletItems?: string[] | null;
                   labeledItems?:
@@ -822,6 +815,36 @@ export interface Trendsetter {
   _status?: ('draft' | 'published') | null;
 }
 /**
+ * Shown in the "Academic Notifications" card on the homepage, newest first.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "academic-notifications".
+ */
+export interface AcademicNotification {
+  id: string;
+  /**
+   * e.g. "Result Declaration Odd Semester/Winter Session August 2026-27"
+   */
+  title: string;
+  date: string;
+  /**
+   * Shows a small "NEW" label above the title on the card.
+   */
+  isNew?: boolean | null;
+  /**
+   * Where "click here" should go — a page URL or a direct PDF URL. Takes priority over the PDF upload below. Leave empty (along with the PDF) to hide the button entirely.
+   */
+  link?: string | null;
+  /**
+   * Only used if the Link URL above is empty.
+   */
+  pdf?: (string | null) | Media;
+  status?: ('draft' | 'published') | null;
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
@@ -876,6 +899,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'trendsetters';
         value: string | Trendsetter;
+      } | null)
+    | ({
+        relationTo: 'academic-notifications';
+        value: string | AcademicNotification;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -1142,14 +1169,8 @@ export interface CoursesSelect<T extends boolean = true> {
               tabs?:
                 | T
                 | {
-                    id?: T;
                     num?: T;
                     label?: T;
-                  };
-              contents?:
-                | T
-                | {
-                    tabId?: T;
                     type?: T;
                     bulletItems?: T;
                     labeledItems?:
@@ -1380,6 +1401,21 @@ export interface TrendsettersSelect<T extends boolean = true> {
         package?: T;
         id?: T;
       };
+  status?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "academic-notifications_select".
+ */
+export interface AcademicNotificationsSelect<T extends boolean = true> {
+  title?: T;
+  date?: T;
+  isNew?: T;
+  link?: T;
+  pdf?: T;
   status?: T;
   updatedAt?: T;
   createdAt?: T;

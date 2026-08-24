@@ -14,6 +14,7 @@ import { Articles } from './collections/Articles'
 import { Placements } from './collections/Placements'
 import { PlacementHero } from './collections/PlacementHero'
 import { Trendsetters } from './collections/Trendsetters'
+import { AcademicNotifications } from './collections/AcademicNotifications'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -48,7 +49,7 @@ admin: {
     baseDir: path.resolve(dirname),
   },
 },
-  collections: [Users, Media, Courses, FeeStructures, Articles, Placements, PlacementHero, Trendsetters],
+  collections: [Users, Media, Courses, FeeStructures, Articles, Placements, PlacementHero, Trendsetters, AcademicNotifications],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',
   typescript: {
