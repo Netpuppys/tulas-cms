@@ -70,7 +70,7 @@ export const Placements: CollectionConfig = {
       label: 'Company Logo upload',
       admin: { description: 'Only used if the Company Logo URL above is empty.' },
     },
-    { name: 'package', type: 'text', required: true, admin: { description: 'e.g. "44 LPA"' } },
+    { name: 'package', type: 'text', required: false, admin: { description: 'e.g. "44 LPA"' } },
     { name: 'designation', type: 'text', admin: { description: 'e.g. "Software Dev Engineer". Optional.' } },
     { name: 'batch', type: 'text', admin: { description: 'e.g. "Class of 2026". Optional.' } },
     {
