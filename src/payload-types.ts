@@ -76,6 +76,7 @@ export interface Config {
     'placement-hero': PlacementHero;
     trendsetters: Trendsetter;
     'academic-notifications': AcademicNotification;
+    events: Event;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -92,6 +93,7 @@ export interface Config {
     'placement-hero': PlacementHeroSelect<false> | PlacementHeroSelect<true>;
     trendsetters: TrendsettersSelect<false> | TrendsettersSelect<true>;
     'academic-notifications': AcademicNotificationsSelect<false> | AcademicNotificationsSelect<true>;
+    events: EventsSelect<false> | EventsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -695,7 +697,7 @@ export interface Placement {
   /**
    * e.g. "44 LPA"
    */
-  package: string;
+  package?: string | null;
   /**
    * e.g. "Software Dev Engineer". Optional.
    */
@@ -845,6 +847,53 @@ export interface AcademicNotification {
   _status?: ('draft' | 'published') | null;
 }
 /**
+ * Shown on the homepage "Upcoming Events" section (soonest 4) and the full /events page (all upcoming events).
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "events".
+ */
+export interface Event {
+  id: string;
+  title: string;
+  /**
+   * Short summary shown on the /events card. Optional.
+   */
+  description?: string | null;
+  /**
+   * e.g. "Dept. of Computer Science". Optional.
+   */
+  author?: string | null;
+  date: string;
+  /**
+   * e.g. "10:00 AM – 6:00 PM". Optional.
+   */
+  timeline?: string | null;
+  /**
+   * e.g. "Innovation Hub, Block C". Optional.
+   */
+  location?: string | null;
+  /**
+   * e.g. "Technical", "Cultural", "Sports". Optional.
+   */
+  category?: string | null;
+  /**
+   * Takes priority over the upload field below.
+   */
+  imageUrl?: string | null;
+  /**
+   * Only used if the Image URL above is empty.
+   */
+  image?: (string | null) | Media;
+  /**
+   * Registration or details link — external URLs show a "Register" button, internal paths show "Details". Leave empty to hide the button entirely.
+   */
+  link?: string | null;
+  status?: ('draft' | 'published') | null;
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
@@ -903,6 +952,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'academic-notifications';
         value: string | AcademicNotification;
+      } | null)
+    | ({
+        relationTo: 'events';
+        value: string | Event;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -1416,6 +1469,26 @@ export interface AcademicNotificationsSelect<T extends boolean = true> {
   isNew?: T;
   link?: T;
   pdf?: T;
+  status?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "events_select".
+ */
+export interface EventsSelect<T extends boolean = true> {
+  title?: T;
+  description?: T;
+  author?: T;
+  date?: T;
+  timeline?: T;
+  location?: T;
+  category?: T;
+  imageUrl?: T;
+  image?: T;
+  link?: T;
   status?: T;
   updatedAt?: T;
   createdAt?: T;
