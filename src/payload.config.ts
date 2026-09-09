@@ -71,6 +71,16 @@ admin: {
     process.env.FRONTEND_URL,
   ].filter(Boolean) as string[],
   sharp,
+  // Payload only exposes ONE upload-size ceiling app-wide (busboy limit
+  // applied before any collection code runs) — this has to be big enough
+  // for the largest PDF we still want to accept. The actual "2MB except
+  // PDFs" rule is enforced per-file in Media.ts's beforeValidate hook,
+  // which can tell mimeTypes apart; this is just the outer hard cap.
+  upload: {
+    limits: {
+      fileSize: 20 * 1024 * 1024, // 20MB
+    },
+  },
   plugins: [
     ...(s3Enabled
       ? [
