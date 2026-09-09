@@ -56,8 +56,22 @@ admin: {
   typescript: {
     outputFile: path.resolve(dirname, 'payload-types.ts'),
   },
+  // No connectOptions here previously meant the MongoDB driver's default
+  // pool size (up to 100 sockets per client). On Vercel, every concurrent
+  // serverless invocation can spin up its own client — with no cap, that
+  // multiplies fast against the M0 cluster's small connection ceiling,
+  // which is what triggered the Atlas "connections exceeded threshold"
+  // alert. Capping maxPoolSize keeps each instance's footprint small, and
+  // maxIdleTimeMS releases idle sockets quickly instead of holding them
+  // open between requests.
   db: mongooseAdapter({
     url: process.env.DATABASE_URL || '',
+    connectOptions: {
+      maxPoolSize: 10,
+      minPoolSize: 1,
+      maxIdleTimeMS: 30000,
+      serverSelectionTimeoutMS: 10000,
+    },
   }),
   // Next.js dev servers auto-increment to the next free port when their
   // usual one is taken, so tulas_rev doesn't always land on 3002 locally —
