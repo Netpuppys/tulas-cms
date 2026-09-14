@@ -16,7 +16,7 @@ export const Courses: CollectionConfig = {
   },
   fields: [
     { name: 'title', type: 'text', required: true, label: 'Course title (e.g. "BBA Business Analytics")' },
-    { name: 'slug', type: 'text', required: true, unique: true, admin: { description: 'URL path, e.g. bba/business-analytics' } },
+    { name: 'slug', type: 'text', required: true, unique: true, admin: { description: 'URL path, e.g. bba-business-analytics — hyphens, not slashes.' } },
     { name: 'program', type: 'text', admin: { description: 'e.g. "BBA", "BTech", "MBA"' } },
     { name: 'school', type: 'text', admin: { description: 'e.g. "School of Management"' } },
     {
@@ -102,4 +102,14 @@ export const Courses: CollectionConfig = {
       blocks: CourseBlocks,
     },
   ],
+  hooks: {
+    beforeValidate: [
+      ({ data }) => {
+        if (data?.slug && typeof data.slug === 'string' && data.slug.includes('/')) {
+          data.slug = data.slug.replace(/\//g, '-')
+        }
+        return data
+      },
+    ],
+  },
 }

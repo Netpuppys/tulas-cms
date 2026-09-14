@@ -187,7 +187,7 @@ export interface Course {
   id: string;
   title: string;
   /**
-   * URL path, e.g. bba/business-analytics
+   * URL path, e.g. bba-business-analytics — hyphens, not slashes.
    */
   slug: string;
   /**
