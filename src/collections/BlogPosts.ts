@@ -55,7 +55,7 @@ export const BlogPosts: CollectionConfig = {
       name: 'category',
       type: 'text',
       defaultValue: 'Blogs',
-      admin: { description: 'Free text — the old blog only ever used a single "Blogs" category.' },
+      admin: { description: 'Categories' },
     },
     {
       name: 'bannerImageUrl',
@@ -74,7 +74,7 @@ export const BlogPosts: CollectionConfig = {
       name: 'body',
       type: 'richText',
       label: 'Content',
-      admin: { description: 'Main content for the post — used for everything written from now on.' },
+      admin: { description: "Main content. Use '/' for elements " },
     },
     {
       name: 'content',

@@ -230,7 +230,7 @@ export interface Course {
     | (
         | {
             breadcrumb: {
-              currentRoute: string;
+              Badge: string;
             };
             badge?: string | null;
             title: string;
@@ -572,7 +572,7 @@ export interface Article {
   id: string;
   title: string;
   /**
-   * URL path, e.g. "pinaak-2026-cultural-fest" — used as /media/<slug>
+   * URL path, e.g. "sanskriti-cultural-2024-fest" — used as /media/<slug>
    */
   slug: string;
   /**
@@ -596,7 +596,7 @@ export interface Article {
   /**
    * Short summary shown on article cards and at the top of the article.
    */
-  excerpt: string;
+  ShortSummary: string;
   /**
    * Full article content.
    */
@@ -836,7 +836,7 @@ export interface AcademicNotification {
    */
   showNewBadge?: boolean | null;
   /**
-   * Where "click here" should go — a page URL or a direct PDF URL. Takes priority over the PDF upload below. Leave empty (along with the PDF) to hide the button entirely.
+   * Attachment URL for the notification link. e.g - pdf or link
    */
   link?: string | null;
   /**
@@ -909,7 +909,7 @@ export interface BlogPost {
    */
   slug: string;
   /**
-   * Free text — the old blog only ever used a single "Blogs" category.
+   * Categories
    */
   category?: string | null;
   /**
@@ -921,7 +921,7 @@ export interface BlogPost {
    */
   bannerImage?: (string | null) | Media;
   /**
-   * Main content for the post — used for everything written from now on.
+   * Main content. Use '/' for elements
    */
   body?: {
     root: {
@@ -1140,7 +1140,7 @@ export interface CoursesSelect<T extends boolean = true> {
               breadcrumb?:
                 | T
                 | {
-                    currentRoute?: T;
+                    Badge?: T;
                   };
               badge?: T;
               title?: T;
@@ -1445,7 +1445,7 @@ export interface ArticlesSelect<T extends boolean = true> {
   readTime?: T;
   imageUrl?: T;
   image?: T;
-  excerpt?: T;
+  ShortSummary?: T;
   body?: T;
   newspaperGallery?:
     | T

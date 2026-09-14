@@ -17,7 +17,7 @@ export const ExternalArticles: CollectionConfig = {
     defaultColumns: ['title', 'link', 'updatedAt'],
     group: 'Media / News',
     description:
-      'Curated links to external press coverage, shown in the "More from DevBhoomi Times" strip on article pages. Independent of the Articles collection — add real published stories here.',
+      'Curated links to external press coverage, Independent of the Articles collection — add real published stories here.',
   },
   fields: [
     { name: 'title', type: 'text', required: true },

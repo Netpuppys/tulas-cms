@@ -39,7 +39,7 @@ export const AcademicNotifications: CollectionConfig = {
       name: 'link',
       type: 'text',
       label: 'Link URL',
-      admin: { description: 'Where "click here" should go — a page URL or a direct PDF URL. Takes priority over the PDF upload below. Leave empty (along with the PDF) to hide the button entirely.' },
+      admin: { description: 'Attachment URL for the notification link. e.g - pdf or link' },
     },
     {
       name: 'pdf',

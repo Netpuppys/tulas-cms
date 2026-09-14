@@ -29,7 +29,7 @@ export const Articles: CollectionConfig = {
       type: 'text',
       required: true,
       unique: true,
-      admin: { description: 'URL path, e.g. "pinaak-2026-cultural-fest" — used as /media/<slug>' },
+      admin: { description: 'URL path, e.g. "sanskriti-cultural-2024-fest" — used as /media/<slug>' },
     },
     {
       name: 'category',
@@ -62,7 +62,7 @@ export const Articles: CollectionConfig = {
       admin: { description: 'Only used if the Photo URL above is empty.' },
     },
     {
-      name: 'excerpt',
+      name: 'ShortSummary',
       type: 'textarea',
       required: true,
       admin: { description: 'Short summary shown on article cards and at the top of the article.' },

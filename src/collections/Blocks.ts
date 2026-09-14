@@ -32,7 +32,7 @@ export const HeroBlock: Block = {
     {
       name: 'breadcrumb',
       type: 'group',
-      fields: [{ name: 'currentRoute', type: 'text', required: true }],
+      fields: [{ name: 'Badge', type: 'text', required: true }],
     },
     { name: 'badge', type: 'text' },
     { name: 'title', type: 'text', required: true },

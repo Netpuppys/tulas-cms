@@ -2,7 +2,7 @@ export default function AdminLogo() {
   return (
     <img
       src="/tulas-footer-logo.png"
-      alt="Tulas Institute"
+      alt="Tulas University"
       style={{
         height: '28px',
         width: 'auto',
