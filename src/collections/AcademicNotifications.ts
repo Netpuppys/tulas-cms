@@ -13,7 +13,7 @@ export const AcademicNotifications: CollectionConfig = {
   },
   admin: {
     useAsTitle: 'title',
-    defaultColumns: ['title', 'date', 'isNew', 'status'],
+    defaultColumns: ['title', 'date', 'showNewBadge', 'status'],
     group: 'Notifications',
     description: 'Shown in the "Academic Notifications" card on the homepage, newest first.',
   },
@@ -24,7 +24,12 @@ export const AcademicNotifications: CollectionConfig = {
     { name: 'title', type: 'text', required: true, admin: { description: 'e.g. "Result Declaration Odd Semester/Winter Session August 2026-27"' } },
     { name: 'date', type: 'date', required: true, admin: { date: { pickerAppearance: 'dayOnly' } } },
     {
-      name: 'isNew',
+      // NOT named `isNew` — that's a reserved Mongoose document property
+      // (tracks whether a doc has been saved yet), and a schema field with
+      // the same name collides with it under the hood. Renamed to avoid
+      // the conflict; see rename-notification-isnew-field.ts for the
+      // migration that moved existing data over from the old field name.
+      name: 'showNewBadge',
       type: 'checkbox',
       defaultValue: false,
       label: '"NEW" badge',

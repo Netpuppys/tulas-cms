@@ -77,6 +77,7 @@ export interface Config {
     trendsetters: Trendsetter;
     'academic-notifications': AcademicNotification;
     events: Event;
+    'blog-posts': BlogPost;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -94,6 +95,7 @@ export interface Config {
     trendsetters: TrendsettersSelect<false> | TrendsettersSelect<true>;
     'academic-notifications': AcademicNotificationsSelect<false> | AcademicNotificationsSelect<true>;
     events: EventsSelect<false> | EventsSelect<true>;
+    'blog-posts': BlogPostsSelect<false> | BlogPostsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -832,7 +834,7 @@ export interface AcademicNotification {
   /**
    * Shows a small "NEW" label above the title on the card.
    */
-  isNew?: boolean | null;
+  showNewBadge?: boolean | null;
   /**
    * Where "click here" should go — a page URL or a direct PDF URL. Takes priority over the PDF upload below. Leave empty (along with the PDF) to hide the button entirely.
    */
@@ -888,6 +890,77 @@ export interface Event {
    * Registration or details link — external URLs show a "Register" button, internal paths show "Details". Leave empty to hide the button entirely.
    */
   link?: string | null;
+  status?: ('draft' | 'published') | null;
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+}
+/**
+ * Write new posts with the rich text editor below. The legacy HTML field only appears on posts migrated from the old blog.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "blog-posts".
+ */
+export interface BlogPost {
+  id: string;
+  title: string;
+  /**
+   * URL path — matches the old blog's slug so existing links keep working.
+   */
+  slug: string;
+  /**
+   * Free text — the old blog only ever used a single "Blogs" category.
+   */
+  category?: string | null;
+  /**
+   * Takes priority over the upload field below. Migrated posts point at their original S3 URL directly — no re-upload needed.
+   */
+  bannerImageUrl?: string | null;
+  /**
+   * Only used if the Banner Image URL above is empty.
+   */
+  bannerImage?: (string | null) | Media;
+  /**
+   * Main content for the post — used for everything written from now on.
+   */
+  body?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  /**
+   * Raw HTML from the old blog migration — not a rich text editor. Only relevant for migrated posts; leave empty on new ones.
+   */
+  content?: string | null;
+  /**
+   * Short summary shown on post cards.
+   */
+  excerpt?: string | null;
+  authorName?: string | null;
+  /**
+   * Original publish date, preserved from the old blog for sorting/display.
+   */
+  publishedDate: string;
+  /**
+   * Optional.
+   */
+  tags?: string[] | null;
+  metaTitle?: string | null;
+  metaDescription?: string | null;
+  /**
+   * Optional.
+   */
+  metaKeywords?: string[] | null;
   status?: ('draft' | 'published') | null;
   updatedAt: string;
   createdAt: string;
@@ -956,6 +1029,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'events';
         value: string | Event;
+      } | null)
+    | ({
+        relationTo: 'blog-posts';
+        value: string | BlogPost;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -1466,7 +1543,7 @@ export interface TrendsettersSelect<T extends boolean = true> {
 export interface AcademicNotificationsSelect<T extends boolean = true> {
   title?: T;
   date?: T;
-  isNew?: T;
+  showNewBadge?: T;
   link?: T;
   pdf?: T;
   status?: T;
@@ -1489,6 +1566,30 @@ export interface EventsSelect<T extends boolean = true> {
   imageUrl?: T;
   image?: T;
   link?: T;
+  status?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "blog-posts_select".
+ */
+export interface BlogPostsSelect<T extends boolean = true> {
+  title?: T;
+  slug?: T;
+  category?: T;
+  bannerImageUrl?: T;
+  bannerImage?: T;
+  body?: T;
+  content?: T;
+  excerpt?: T;
+  authorName?: T;
+  publishedDate?: T;
+  tags?: T;
+  metaTitle?: T;
+  metaDescription?: T;
+  metaKeywords?: T;
   status?: T;
   updatedAt?: T;
   createdAt?: T;
