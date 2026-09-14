@@ -34,7 +34,7 @@ export const Articles: CollectionConfig = {
     {
       name: 'category',
       type: 'text',
-      admin: { description: 'e.g. "DBUU Events", "Awards", "Academics"' },
+      admin: { description: 'e.g. "Tulas Events", "Awards", "Academics"' },
     },
     { name: 'author', type: 'text', defaultValue: 'Admin' },
     {

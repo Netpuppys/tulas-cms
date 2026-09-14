@@ -576,7 +576,7 @@ export interface Article {
    */
   slug: string;
   /**
-   * e.g. "DBUU Events", "Awards", "Academics"
+   * e.g. "Tulas Events", "Awards", "Academics"
    */
   category?: string | null;
   author?: string | null;
