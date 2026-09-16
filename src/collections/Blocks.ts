@@ -29,12 +29,13 @@ export const HeroBlock: Block = {
   slug: 'hero',
   labels: { singular: 'Hero', plural: 'Heroes' },
   fields: [
-    {
-      name: 'breadcrumb',
-      type: 'group',
-      fields: [{ name: 'Badge', type: 'text', required: true }],
-    },
-    { name: 'badge', type: 'text' },
+    // Previously there were two separate fields that both auto-labeled as
+    // "Badge" in the admin UI (a required nested `breadcrumb.Badge` and this
+    // top-level `badge`), with no way to tell them apart on screen. The
+    // nested one was never read by the frontend (mapCmsCourseData.js only
+    // ever reads `hero.badge`), so it was removed. This is the only real
+    // badge field — it renders as the pill under the hero title.
+    { name: 'badge', type: 'text', label: 'Hero Badge' },
     { name: 'title', type: 'text', required: true },
     { name: 'highlight', type: 'text' },
     { name: 'description', type: 'textarea', required: true },

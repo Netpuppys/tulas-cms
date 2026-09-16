@@ -229,9 +229,6 @@ export interface Course {
   sections?:
     | (
         | {
-            breadcrumb: {
-              Badge: string;
-            };
             badge?: string | null;
             title: string;
             highlight?: string | null;
@@ -1137,11 +1134,6 @@ export interface CoursesSelect<T extends boolean = true> {
         hero?:
           | T
           | {
-              breadcrumb?:
-                | T
-                | {
-                    Badge?: T;
-                  };
               badge?: T;
               title?: T;
               highlight?: T;
