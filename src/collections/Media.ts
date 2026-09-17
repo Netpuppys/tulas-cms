@@ -9,6 +9,34 @@ import { APIError } from 'payload'
 // runs, so they're already reliable here.
 const MAX_NON_PDF_BYTES = 2 * 1024 * 1024
 
+// --- Auto-fill alt text instead of blocking the save ---------------------
+// `alt` is `required: true` below (it should be — screen readers and SEO
+// depend on it), but Payload's admin panel only checks required fields
+// client-side on the SINGLE-file upload form. The bulk-upload drawer's
+// per-file quick-edit panel does not run that same check before firing the
+// request, so leaving `alt` empty there previously meant: request goes out
+// → server rejects it as a validation error → editor sees a failure after
+// the fact, one per file, for a batch upload.
+//
+// Rather than trying to patch Payload's bulk-upload drawer's client-side
+// validation (admin-UI internals that could change between Payload
+// versions), this guarantees correctness at the data layer instead: if an
+// editor doesn't type alt text, we derive a reasonable one from the
+// filename automatically, before Payload's required-field check ever runs.
+// That means the request can never fail for a missing `alt` — no error
+// after the request, on any upload path (single or bulk), no matter what
+// the admin UI does or doesn't validate client-side. Editors who want more
+// descriptive alt text remain free to edit it afterwards.
+function humanizeFilename(filename?: string): string {
+  if (!filename) return ''
+  const base = filename.replace(/\.[^/.]+$/, '')
+  return base
+    .replace(/[-_]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .replace(/\b\w/g, (c) => c.toUpperCase())
+}
+
 // --- Bulk-upload concurrency limiter -------------------------------------
 // When an editor drags several files into the admin panel's Media list and
 // uses the built-in bulk-upload drawer, the BROWSER fires one upload
@@ -100,6 +128,12 @@ export const Media: CollectionConfig = {
       },
     ],
     beforeValidate: [
+      ({ data }) => {
+        if (data && !String(data.alt || '').trim()) {
+          data.alt = humanizeFilename(data.filename) || 'Untitled image'
+        }
+        return data
+      },
       ({ data }) => {
         const isPdf = data?.mimeType === 'application/pdf'
         if (!isPdf && typeof data?.filesize === 'number' && data.filesize > MAX_NON_PDF_BYTES) {
