@@ -1,5 +1,111 @@
-import type { CollectionConfig, Where } from 'payload'
+import type { CollectionConfig, Endpoint, PayloadRequest, Where } from 'payload'
 import { APIError } from 'payload'
+import { getTranslation } from '@payloadcms/translations'
+import { status as httpStatus } from 'http-status'
+
+// --- Why deleting even ONE image can 500 the public website ---------------
+// Payload wraps every delete in a MongoDB transaction/session, opened
+// before any of our hooks run and held open for the ENTIRE delete —
+// including the slow part: the network round trip to S3 to remove the
+// actual file (a few seconds). On a free-tier, resource-throttled Atlas
+// cluster, holding a transaction open for a few seconds is enough to slow
+// down or fail *other* concurrent requests (like the public site's own
+// reads), even for a single delete - this isn't about concurrency/volume.
+//
+// Payload's Local API supports a `disableTransaction: true` option that
+// skips opening that transaction entirely, but the REST endpoints Payload
+// registers automatically (used by the admin panel) never pass it - there
+// is no query param or header to opt into it from the outside. The only
+// way to use it is to call the Local API (`req.payload.delete(...)`)
+// ourselves. So the two endpoints below re-implement Payload's own default
+// delete routes (same paths, methods, and response shapes, so the admin
+// panel's built-in delete UI keeps working exactly as before) but go
+// through the Local API with `disableTransaction: true`, so a delete's S3
+// round trip no longer holds any database connection hostage.
+async function parseWhere(req: PayloadRequest): Promise<Where | undefined> {
+  const raw = (req.query as Record<string, unknown> | undefined)?.where
+  if (!raw) return undefined
+  if (typeof raw === 'string') {
+    try {
+      return JSON.parse(raw) as Where
+    } catch {
+      return undefined
+    }
+  }
+  return raw as Where
+}
+
+const deleteManyEndpoint: Endpoint = {
+  path: '/',
+  method: 'delete',
+  handler: async (req) => {
+    try {
+      const where = await parseWhere(req)
+      if (!where) {
+        return Response.json({ docs: [], errors: [{ message: "Missing 'where' query of documents to delete." }] }, { status: 400 })
+      }
+      const collection = req.payload.collections.media.config
+      const result = await req.payload.delete({
+        collection: 'media',
+        where,
+        req,
+        overrideAccess: false,
+        disableTransaction: true,
+      })
+      if (result.errors.length === 0) {
+        const message = req.t('general:deletedCountSuccessfully', {
+          count: result.docs.length,
+          label: getTranslation(collection.labels[result.docs.length === 1 ? 'singular' : 'plural'], req.i18n),
+        })
+        return Response.json({ ...result, message }, { status: httpStatus.OK })
+      }
+      const errors = result.errors.map((error) => (error.isPublic ? error : { ...error, message: 'Something went wrong.' }))
+      const total = result.docs.length + errors.length
+      const message = req.t('error:unableToDeleteCount', {
+        count: errors.length,
+        label: getTranslation(collection.labels[total === 1 ? 'singular' : 'plural'], req.i18n),
+        total,
+      })
+      return Response.json({ ...result, errors, message }, { status: httpStatus.BAD_REQUEST })
+    } catch (err) {
+      // Never let this throw - a thrown error here hits Payload's generic
+      // error-response path, which is missing the `docs` key that the
+      // admin panel's bulk-delete UI reads unconditionally, and that's
+      // exactly the crash we're trying to get away from.
+      const message = err instanceof APIError && err.isPublic ? err.message : 'Something went wrong while deleting.'
+      return Response.json({ docs: [], errors: [{ message }] }, { status: 400 })
+    }
+  },
+}
+
+const deleteByIDEndpoint: Endpoint = {
+  path: '/:id',
+  method: 'delete',
+  handler: async (req) => {
+    try {
+      const id = req.routeParams?.id as string | undefined
+      if (!id) {
+        return Response.json({ message: req.t('general:notFound') }, { status: httpStatus.NOT_FOUND })
+      }
+      const doc = await req.payload.delete({
+        collection: 'media',
+        id,
+        req,
+        overrideAccess: false,
+        disableTransaction: true,
+      })
+      if (!doc) {
+        return Response.json({ message: req.t('general:notFound') }, { status: httpStatus.NOT_FOUND })
+      }
+      return Response.json({ doc, message: req.t('general:deletedSuccessfully') }, { status: httpStatus.OK })
+    } catch (err) {
+      const message = err instanceof APIError && err.isPublic ? err.message : 'Something went wrong while deleting.'
+      const status = err instanceof APIError ? err.status : 400
+      return Response.json({ message }, { status })
+    }
+  },
+}
+// --------------------------------------------------------------------------
 
 // --- Bulk-delete cap ------------------------------------------------------
 // Deleting several files at once means the server deletes every one of
@@ -145,6 +251,10 @@ export const Media: CollectionConfig = {
     },
   ],
   upload: true,
+  // These shadow Payload's own default delete routes (same path + method),
+  // so the admin panel's existing delete buttons keep working unchanged -
+  // see the big comment above for why this is necessary.
+  endpoints: [deleteManyEndpoint, deleteByIDEndpoint],
   hooks: {
     beforeOperation: [
       async ({ operation, args, req }) => {

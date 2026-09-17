@@ -55,7 +55,17 @@ admin: {
   },
   db: mongooseAdapter({
     url: process.env.DATABASE_URL || '',
-    bulkOperationsSingleTransaction: true,
+    // NOTE: bulkOperationsSingleTransaction used to be on here to stop
+    // Payload from deleting many files at once via Promise.all. It's off
+    // now: the Media collection's own custom delete endpoints (see
+    // src/collections/Media.ts) use disableTransaction so deletes never
+    // hold a DB transaction open across the slow S3 file-delete call in
+    // the first place - which was the actual root cause, not concurrency.
+    // Leaving this setting on would have made it WORSE for a multi-file
+    // delete: it forces a separate transaction per document, so with
+    // disableTransaction skipping the outer one, each file would still
+    // open (and hold open across its own S3 call) its own transaction,
+    // just one after another instead of all together.
     connectOptions: {
       maxPoolSize: 10,
       minPoolSize: 1,
