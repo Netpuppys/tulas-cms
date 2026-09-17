@@ -250,7 +250,39 @@ export const Media: CollectionConfig = {
       required: true,
     },
   ],
-  upload: true,
+  upload: {
+    // Every image on the site is served by this collection's file route,
+    // which proxies through to S3 (needed so Payload's read-access rules
+    // are enforced) - but without a Cache-Control header, that means every
+    // single view of an image is a fresh S3 request, browser or CDN cache
+    // or not. That's what triggered the AWS free-tier usage alert. Since
+    // Media is publicly readable anyway (`access.read: () => true` above),
+    // it's safe to let browsers AND Vercel's own CDN cache these responses
+    // instead of re-asking S3 every time - this is the single biggest lever
+    // for cutting S3 request volume.
+    //
+    // 2 days, not "forever": if someone deletes an image and later uploads
+    // a *different* file that happens to land on the same generated
+    // filename, a browser caching "forever" would keep showing the old
+    // image for that visitor indefinitely. Capping it at 2 days (plus a
+    // 12-hour stale-while-revalidate grace window) still eliminates the
+    // vast majority of repeat S3 requests, while keeping that edge case
+    // short-lived instead of permanent.
+    //
+    // NOTE on "clear the cache when an edit succeeds": normal edits already
+    // do this automatically, with no extra code needed. Payload checks for
+    // filename collisions against EVERY doc, including the one you're
+    // currently editing - so re-uploading a replacement file (even with the
+    // exact same original name) always gets assigned a brand-new filename,
+    // which means a brand-new URL, which is a cache miss by definition, not
+    // a stale hit. The 2-day cap above only bounds the one case that isn't
+    // automatically covered: fully deleting a doc, then later uploading an
+    // unrelated file that happens to reuse that now-freed filename.
+    modifyResponseHeaders: ({ headers }) => {
+      headers.set('Cache-Control', 'public, max-age=172800, stale-while-revalidate=43200')
+      return headers
+    },
+  },
   // These shadow Payload's own default delete routes (same path + method),
   // so the admin panel's existing delete buttons keep working unchanged -
   // see the big comment above for why this is necessary.
