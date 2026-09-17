@@ -1,4 +1,4 @@
-import type { CollectionConfig } from 'payload'
+import type { CollectionConfig, Where } from 'payload'
 import { APIError } from 'payload'
 
 // Payload only supports one global upload size ceiling (set on buildConfig,
@@ -67,6 +67,23 @@ const ACQUIRE_TIMEOUT_MS = 45000
 const POLL_INTERVAL_MS = 400
 const LOCKS_COLLECTION = '_uploadLocks'
 
+// --- Bulk-delete cap ------------------------------------------------------
+// Deleting several files from the admin panel's list view sends ONE
+// request to the server — but that single request still has to delete
+// every selected file from S3 and from the database, one at a time, inside
+// that one request, before it can respond. Each S3 delete is a network
+// round trip, so deleting 6+ files back to back can take a few seconds —
+// during which that request sits busy on a shared, resource-limited free
+// MongoDB cluster. Observed in practice: 1-2 files at a time is fine, 6+
+// causes brief (2-3s) site-wide 500s while it's in progress.
+//
+// Rather than trying to out-race AWS/MongoDB latency, this caps how many
+// files can be deleted in a single request — well under the size that
+// caused trouble — and rejects upfront with a clear message instead of
+// letting a big batch through and briefly degrading the live site.
+// Editors can still delete everything, just in a couple of smaller batches.
+const MAX_BULK_DELETE = 5
+
 let ttlIndexEnsured = false
 
 async function ensureLockCollection(db: any) {
@@ -121,10 +138,24 @@ export const Media: CollectionConfig = {
   upload: true,
   hooks: {
     beforeOperation: [
-      async ({ operation, req }) => {
-        if (operation !== 'create') return
-        const db = req.payload.db.connection.db
-        req.context.uploadLockId = await acquireUploadSlot(db)
+      async ({ operation, args, req }) => {
+        if (operation === 'create') {
+          const db = req.payload.db.connection.db
+          req.context.uploadLockId = await acquireUploadSlot(db)
+          return
+        }
+        if (operation === 'delete') {
+          const where = (args as { where?: Where } | undefined)?.where
+          if (where) {
+            const { totalDocs } = await req.payload.count({ collection: 'media', req, where })
+            if (totalDocs > MAX_BULK_DELETE) {
+              throw new APIError(
+                `You selected ${totalDocs} files — please delete ${MAX_BULK_DELETE} or fewer at a time. Deleting a large batch at once briefly slows down the live site.`,
+                400,
+              )
+            }
+          }
+        }
       },
     ],
     beforeValidate: [

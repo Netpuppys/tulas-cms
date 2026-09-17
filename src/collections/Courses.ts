@@ -23,7 +23,6 @@ export const Courses: CollectionConfig = {
       name: 'status',
       type: 'select',
       defaultValue: 'draft',
-      index: true, // filtered on every nav-menu and course-detail request
       options: [
         { label: 'Draft', value: 'draft' },
         { label: 'Published', value: 'published' },

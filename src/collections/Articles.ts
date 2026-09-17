@@ -41,7 +41,6 @@ export const Articles: CollectionConfig = {
       name: 'publishedDate',
       type: 'date',
       required: true,
-      index: true, // sorted on every /media listing request
       admin: { date: { pickerAppearance: 'dayOnly' } },
     },
     {
