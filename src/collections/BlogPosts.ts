@@ -91,6 +91,7 @@ export const BlogPosts: CollectionConfig = {
       name: 'publishedDate',
       type: 'date',
       required: true,
+      index: true, // sorted on every blog listing request
       admin: { date: { pickerAppearance: 'dayOnly' }, description: 'Original publish date, preserved from the old blog for sorting/display.' },
     },
     {
@@ -111,6 +112,7 @@ export const BlogPosts: CollectionConfig = {
       name: 'status',
       type: 'select',
       defaultValue: 'draft',
+      index: true, // filtered on every blog listing/detail request
       options: [
         { label: 'Draft', value: 'draft' },
         { label: 'Published', value: 'published' },

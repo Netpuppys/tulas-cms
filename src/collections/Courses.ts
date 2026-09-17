@@ -23,6 +23,7 @@ export const Courses: CollectionConfig = {
       name: 'status',
       type: 'select',
       defaultValue: 'draft',
+      index: true, // filtered on every nav-menu and course-detail request
       options: [
         { label: 'Draft', value: 'draft' },
         { label: 'Published', value: 'published' },
@@ -80,6 +81,7 @@ export const Courses: CollectionConfig = {
       name: 'showInNav',
       type: 'checkbox',
       defaultValue: true,
+      index: true, // filtered together with status on every nav-menu request
       label: 'Show in header menu',
       admin: {
         description: 'Turn off to publish this course page without listing it in the header "Programmes" menu (e.g. a duplicate or legacy entry).',

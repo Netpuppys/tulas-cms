@@ -43,6 +43,7 @@ export const Placements: CollectionConfig = {
       name: 'course',
       type: 'select',
       required: true,
+      index: true, // filtered on every /placement/<course> page load
       options: [
         { label: 'BTech CSE', value: 'btech-cse' },
         { label: 'BTech Core Branches', value: 'btech-core' },
@@ -93,6 +94,7 @@ export const Placements: CollectionConfig = {
       name: 'status',
       type: 'select',
       defaultValue: 'draft',
+      index: true, // filtered on every placements request
       options: [
         { label: 'Draft', value: 'draft' },
         { label: 'Published', value: 'published' },

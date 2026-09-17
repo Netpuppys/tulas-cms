@@ -62,12 +62,14 @@ export const PlacementHero: CollectionConfig = {
       name: 'order',
       type: 'number',
       defaultValue: 0,
+      index: true, // sorted on every hero-slider request
       admin: { description: 'Slide order, lowest first. Cards with the same number fall back to newest first.' },
     },
     {
       name: 'status',
       type: 'select',
       defaultValue: 'draft',
+      index: true, // filtered on every hero-slider request
       options: [
         { label: 'Draft', value: 'draft' },
         { label: 'Published', value: 'published' },

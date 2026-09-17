@@ -41,6 +41,7 @@ export const Articles: CollectionConfig = {
       name: 'publishedDate',
       type: 'date',
       required: true,
+      index: true, // sorted on every /media listing request
       admin: { date: { pickerAppearance: 'dayOnly' } },
     },
     {
@@ -156,6 +157,7 @@ export const Articles: CollectionConfig = {
       name: 'status',
       type: 'select',
       defaultValue: 'draft',
+      index: true, // filtered on every /media listing request
       options: [
         { label: 'Draft', value: 'draft' },
         { label: 'Published', value: 'published' },

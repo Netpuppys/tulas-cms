@@ -25,7 +25,7 @@ export const Events: CollectionConfig = {
     { name: 'title', type: 'text', required: true },
     { name: 'description', type: 'textarea', admin: { description: 'Short summary shown on the /events card. Optional.' } },
     { name: 'author', type: 'text', label: 'Organizer', admin: { description: 'e.g. "Dept. of Computer Science". Optional.' } },
-    { name: 'date', type: 'date', required: true, admin: { date: { pickerAppearance: 'dayOnly' } } },
+    { name: 'date', type: 'date', required: true, index: true, admin: { date: { pickerAppearance: 'dayOnly' } } },
     { name: 'timeline', type: 'text', admin: { description: 'e.g. "10:00 AM – 6:00 PM". Optional.' } },
     { name: 'location', type: 'text', admin: { description: 'e.g. "Innovation Hub, Block C". Optional.' } },
     { name: 'category', type: 'text', admin: { description: 'e.g. "Technical", "Cultural", "Sports". Optional.' } },
@@ -55,6 +55,7 @@ export const Events: CollectionConfig = {
       name: 'status',
       type: 'select',
       defaultValue: 'draft',
+      index: true,
       options: [
         { label: 'Draft', value: 'draft' },
         { label: 'Published', value: 'published' },

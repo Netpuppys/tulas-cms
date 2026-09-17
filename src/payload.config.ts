@@ -72,6 +72,16 @@ admin: {
       minPoolSize: 1,
       maxIdleTimeMS: 30000,
       serverSelectionTimeoutMS: 10000,
+      // Fail fast instead of hanging. Without these, a request that can't
+      // immediately get a free connection (e.g. during a bulk-upload burst,
+      // when all 10 pooled connections in this instance are busy) just sits
+      // and waits — which on a serverless function means the whole request
+      // stalls until it times out anyway, holding everything open longer
+      // and making the underlying pressure worse. Failing quickly with a
+      // clear error is more honest and recovers faster.
+      waitQueueTimeoutMS: 5000,
+      connectTimeoutMS: 10000,
+      socketTimeoutMS: 20000,
     },
   }),
   // Next.js dev servers auto-increment to the next free port when their

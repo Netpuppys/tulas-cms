@@ -22,7 +22,7 @@ export const AcademicNotifications: CollectionConfig = {
   },
   fields: [
     { name: 'title', type: 'text', required: true, admin: { description: 'e.g. "Result Declaration Odd Semester/Winter Session August 2026-27"' } },
-    { name: 'date', type: 'date', required: true, admin: { date: { pickerAppearance: 'dayOnly' } } },
+    { name: 'date', type: 'date', required: true, index: true, admin: { date: { pickerAppearance: 'dayOnly' } } },
     {
       // NOT named `isNew` — that's a reserved Mongoose document property
       // (tracks whether a doc has been saved yet), and a schema field with
@@ -52,6 +52,7 @@ export const AcademicNotifications: CollectionConfig = {
       name: 'status',
       type: 'select',
       defaultValue: 'draft',
+      index: true,
       options: [
         { label: 'Draft', value: 'draft' },
         { label: 'Published', value: 'published' },
