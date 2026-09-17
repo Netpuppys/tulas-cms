@@ -1,6 +1,32 @@
 import type { CollectionConfig, Where } from 'payload'
 import { APIError } from 'payload'
 
+// --- Bulk-delete cap ------------------------------------------------------
+// Deleting several files at once means the server deletes every one of
+// them from S3 + Mongo inside a single request before it can respond —
+// each S3 delete is a network round trip, so a big batch keeps that
+// request (and the connection it's using) busy for a while on a small,
+// shared free-tier cluster. Capping the batch size keeps any one delete
+// request short.
+//
+// IMPORTANT: we do NOT enforce this by throwing an error from a hook.
+// Payload's built-in admin bulk-delete UI has a bug (confirmed by reading
+// its shipped source): when a beforeOperation hook throws, the server's
+// error response has no top-level `docs` key, but the admin client
+// unconditionally reads `json.docs.length` on the response — which throws
+// a TypeError on that missing key, so the editor sees a generic "unknown
+// error occurred" toast instead of our real message, and the delete UI is
+// left broken. So instead, when a batch is over the cap, we quietly
+// rewrite the delete query to match zero documents (so the operation
+// still completes normally, returning a valid `{ docs: [], errors: [] }`
+// shape) and add our own friendly message to `result.errors` in
+// afterOperation below — which the admin UI already knows how to display
+// as a normal error toast, without crashing.
+const MAX_BULK_DELETE = 4
+// A value that can never match a real Mongo ObjectId, used to make the
+// delete query match nothing once a batch is rejected.
+const NO_MATCH_ID = '000000000000000000000000'
+
 // Payload only supports one global upload size ceiling (set on buildConfig,
 // not per-collection) — this hook adds the actual rule on top of it: every
 // non-PDF upload is capped at 2MB, PDFs are exempt (still bounded by the
@@ -67,23 +93,6 @@ const ACQUIRE_TIMEOUT_MS = 45000
 const POLL_INTERVAL_MS = 400
 const LOCKS_COLLECTION = '_uploadLocks'
 
-// --- Bulk-delete cap ------------------------------------------------------
-// Deleting several files from the admin panel's list view sends ONE
-// request to the server — but that single request still has to delete
-// every selected file from S3 and from the database, one at a time, inside
-// that one request, before it can respond. Each S3 delete is a network
-// round trip, so deleting 6+ files back to back can take a few seconds —
-// during which that request sits busy on a shared, resource-limited free
-// MongoDB cluster. Observed in practice: 1-2 files at a time is fine, 6+
-// causes brief (2-3s) site-wide 500s while it's in progress.
-//
-// Rather than trying to out-race AWS/MongoDB latency, this caps how many
-// files can be deleted in a single request — well under the size that
-// caused trouble — and rejects upfront with a clear message instead of
-// letting a big batch through and briefly degrading the live site.
-// Editors can still delete everything, just in a couple of smaller batches.
-const MAX_BULK_DELETE = 5
-
 let ttlIndexEnsured = false
 
 async function ensureLockCollection(db: any) {
@@ -145,15 +154,25 @@ export const Media: CollectionConfig = {
           return
         }
         if (operation === 'delete') {
-          const where = (args as { where?: Where } | undefined)?.where
-          if (where) {
-            const { totalDocs } = await req.payload.count({ collection: 'media', req, where })
-            if (totalDocs > MAX_BULK_DELETE) {
-              throw new APIError(
-                `You selected ${totalDocs} files — please delete ${MAX_BULK_DELETE} or fewer at a time. Deleting a large batch at once briefly slows down the live site.`,
-                400,
-              )
+          try {
+            const where = (args as { where?: Where } | undefined)?.where
+            if (where) {
+              const { totalDocs } = await req.payload.count({ collection: 'media', req, where })
+              if (totalDocs > MAX_BULK_DELETE) {
+                req.context.bulkDeleteRejectedCount = totalDocs
+                // Match nothing instead of throwing - see the note above
+                // MAX_BULK_DELETE for why throwing here is unsafe. Cast to
+                // `any`: this return shape is only valid for the 'delete'
+                // operation, which we've already confirmed above, but the
+                // hook's type covers every operation's args at once.
+                return { ...args, where: { id: { equals: NO_MATCH_ID } } } as any
+              }
             }
+          } catch {
+            // If the guard itself fails (e.g. a transient DB hiccup while
+            // counting), fail OPEN rather than block the delete - a broken
+            // guard should never be able to trigger the admin UI's crash
+            // bug on its own.
           }
         }
       },
@@ -181,6 +200,17 @@ export const Media: CollectionConfig = {
       async ({ operation, req, result }) => {
         if (operation === 'create') {
           await releaseUploadSlot(req.payload.db.connection.db, req.context?.uploadLockId)
+        }
+        if (operation === 'delete' && req.context?.bulkDeleteRejectedCount) {
+          const totalDocs = req.context.bulkDeleteRejectedCount as number
+          const r = result as { docs?: unknown[]; errors?: Array<{ message: string; isPublic?: boolean }> }
+          r.errors = [
+            ...(r.errors || []),
+            {
+              isPublic: true,
+              message: `You selected ${totalDocs} files — please delete ${MAX_BULK_DELETE} or fewer at a time. Nothing was deleted this time; deleting a large batch at once briefly slows down the live site.`,
+            },
+          ]
         }
         return result
       },
