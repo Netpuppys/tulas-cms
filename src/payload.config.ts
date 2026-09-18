@@ -77,13 +77,19 @@ admin: {
     },
   }),
   
+  // Origins must match exactly (no trailing slash), so normalize env values.
+  // FRONTEND_URL may hold several comma-separated origins.
   cors: [
     'http://localhost:3000',
     'http://localhost:3001',
     'http://localhost:3002',
     'http://localhost:3003',
-    process.env.FRONTEND_URL,
-  ].filter(Boolean) as string[],
+    'https://tulas.edu.in',
+    'https://www.tulas.edu.in',
+    ...(process.env.FRONTEND_URL ?? '').split(','),
+  ]
+    .map((origin) => origin.trim().replace(/\/+$/, ''))
+    .filter(Boolean),
   sharp,
 
   upload: {
