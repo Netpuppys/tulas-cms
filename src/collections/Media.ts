@@ -194,8 +194,20 @@ function humanizeFilename(filename?: string): string {
 // slot expires and frees itself automatically within a minute — this can
 // never permanently lock uploads out, only slow bursts down.
 const MAX_CONCURRENT_UPLOADS = 3
-const LOCK_TTL_SECONDS = 60
-const ACQUIRE_TIMEOUT_MS = 45000
+// Lowered from 60s/45s: on the old M0 cluster these were sized to smooth
+// out a burst of 15-20 parallel uploads. Now on M10 that burst is no longer
+// the danger — a STUCK slot is. A slot only leaks when a create request
+// throws before reaching afterOperation (e.g. a rejected file type, a
+// validation error) - harmless on its own, since the slot self-expires. But
+// if an editor retries several times in under a minute (exactly what
+// happens while debugging an upload error), those leaked slots can stack up
+// and fill all 3 at once, making the NEXT, perfectly valid upload sit
+// silently polling for the full timeout with no on-screen feedback - which
+// looks indistinguishable from the admin panel being frozen. Shorter values
+// bound that wait to something an editor won't mistake for a hang, and
+// bound how long a leaked slot can block anyone else.
+const LOCK_TTL_SECONDS = 20
+const ACQUIRE_TIMEOUT_MS = 8000
 const POLL_INTERVAL_MS = 400
 const LOCKS_COLLECTION = '_uploadLocks'
 
@@ -206,8 +218,23 @@ async function ensureLockCollection(db: any) {
   try {
     await db.collection(LOCKS_COLLECTION).createIndex({ createdAt: 1 }, { expireAfterSeconds: LOCK_TTL_SECONDS })
   } catch {
-    // Another concurrent instance already created it, or lost a harmless
-    // race doing so — either way, the index exists, which is all we need.
+    // createIndex refuses to change an existing index's options — it just
+    // throws IndexOptionsConflict. That matters here specifically because
+    // this database already ran an earlier version of this code with
+    // LOCK_TTL_SECONDS = 60; without this fallback, that old 60s index
+    // would silently stick around forever and the new, shorter value below
+    // would never actually take effect in production. `collMod` is the
+    // Mongo command that updates a TTL index's expiry in place.
+    try {
+      await db.command({
+        collMod: LOCKS_COLLECTION,
+        index: { keyPattern: { createdAt: 1 }, expireAfterSeconds: LOCK_TTL_SECONDS },
+      })
+    } catch {
+      // Another concurrent instance is racing to do the same thing, or the
+      // collection doesn't exist yet on this connection — either way,
+      // harmless to ignore; this whole guard is best-effort.
+    }
   }
   ttlIndexEnsured = true
 }
@@ -251,6 +278,15 @@ export const Media: CollectionConfig = {
     },
   ],
   upload: {
+    // NOTE: `allowRestrictedFileTypes` used to be set here to let the
+    // course "Fee Table" block upload .html files through this collection.
+    // That design was replaced (see FeeHtmlPickerField.tsx / Blocks.ts) -
+    // the fee-table HTML is now read client-side and never touches Media
+    // or S3 at all, so this collection no longer needs to accept restricted
+    // file types (executables, .html, etc.). Left off deliberately: Media
+    // is publicly readable (`access.read: () => true` below), so keeping
+    // this narrow is the safer default now that nothing here needs it.
+    //
     // Every image on the site is served by this collection's file route,
     // which proxies through to S3 (needed so Payload's read-access rules
     // are enforced) - but without a Cache-Control header, that means every
@@ -291,8 +327,28 @@ export const Media: CollectionConfig = {
     beforeOperation: [
       async ({ operation, args, req }) => {
         if (operation === 'create') {
-          const db = req.payload.db.connection.db
-          req.context.uploadLockId = await acquireUploadSlot(db)
+          // THE BUG: this used to await acquireUploadSlot() with nothing
+          // catching a failure. acquireUploadSlot only ever fails in two
+          // ways - it times out (all 3 slots busy, including any leaked
+          // from an editor's own earlier failed attempts - see the comment
+          // above MAX_CONCURRENT_UPLOADS) or a transient DB hiccup - and
+          // either one used to throw straight out of this hook. That's the
+          // same class of admin-UI-crash bug already found and fixed for
+          // bulk-delete below: a thrown beforeOperation hook produces an
+          // error response the admin's upload UI isn't guaranteed to
+          // handle cleanly, so instead of a clear error toast, an editor
+          // could see the save silently hang and then the form/drawer stop
+          // responding - exactly "freezes, nothing opens." Our own
+          // concurrency guard should never be able to make an upload WORSE
+          // than not having the guard at all, so it now fails OPEN: any
+          // problem acquiring a slot just skips the throttle for this one
+          // upload instead of blocking or crashing it.
+          try {
+            const db = req.payload.db.connection.db
+            req.context.uploadLockId = await acquireUploadSlot(db)
+          } catch (err) {
+            req.payload.logger.warn({ err, msg: 'Upload concurrency slot unavailable - proceeding without it.' })
+          }
           return
         }
         if (operation === 'delete') {

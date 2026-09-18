@@ -368,6 +368,41 @@ export const RecruitersBlock: Block = {
   ],
 }
 
+// Choose an .html file with the fee table already formatted, and its HTML
+// is copied out and shown on the page exactly as-is - no re-typing, no
+// re-guessing the table layout, no parsing.
+//
+// This does NOT use Payload's `upload` field / Media collection. It used
+// to: the file was uploaded as a Media doc, then a `beforeChange` hook on
+// Courses fetched it back from S3 to fill in `htmlContent`. That round trip
+// through Payload's upload pipeline (file-type checks, S3, and a custom
+// concurrency guard meant for image bursts) was the actual cause of a
+// browser freeze editors hit when choosing an HTML file. None of that
+// machinery is needed here - we only ever want the file's TEXT, not a
+// stored asset - so the custom field below reads it directly in the
+// browser (FileReader) and writes straight into this ordinary textarea
+// field, which saves to MongoDB exactly like any other field on this page
+// the moment the course document is saved. See
+// src/components/FeeHtmlPickerField.tsx.
+export const FeeTableBlock: Block = {
+  slug: 'feeTable',
+  labels: { singular: 'Fee Table (from HTML file)', plural: 'Fee Tables (from HTML file)' },
+  fields: [
+    { name: 'title', type: 'text', label: 'Section title', defaultValue: 'Fee Structure' },
+    {
+      name: 'htmlContent',
+      type: 'textarea',
+      label: 'Extracted HTML',
+      admin: {
+        components: {
+          Field: '/components/FeeHtmlPickerField#default',
+        },
+        description: 'Choose an .html file above - do not edit the box directly.',
+      },
+    },
+  ],
+}
+
 export const CourseBlocks: Block[] = [
   HeroBlock,
   OverviewBlock,
@@ -375,6 +410,7 @@ export const CourseBlocks: Block[] = [
   AISectionBlock,
   CertificationsBlock,
   ProgramDetailsBlock,
+  FeeTableBlock,
   CareersBlock,
   WhyStudyBlock,
   RecruitersBlock,

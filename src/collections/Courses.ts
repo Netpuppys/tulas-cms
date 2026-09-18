@@ -112,5 +112,10 @@ export const Courses: CollectionConfig = {
         return data
       },
     ],
+    // No beforeChange hook for the fee-table block anymore - its
+    // `htmlContent` field is filled in entirely client-side (see
+    // FeeHtmlPickerField.tsx) before the form is ever submitted, so it
+    // saves to MongoDB as plain field data like everything else on this
+    // page. Nothing server-side needs to read a file back from anywhere.
   },
 }

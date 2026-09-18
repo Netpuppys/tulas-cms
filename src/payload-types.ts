@@ -442,6 +442,16 @@ export interface Course {
             blockType: 'programDetails';
           }
         | {
+            title?: string | null;
+            /**
+             * Choose an .html file above - do not edit the box directly.
+             */
+            htmlContent?: string | null;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'feeTable';
+          }
+        | {
             header?: {
               label?: string | null;
               title?: string | null;
@@ -1311,6 +1321,14 @@ export interface CoursesSelect<T extends boolean = true> {
                         };
                     id?: T;
                   };
+              id?: T;
+              blockName?: T;
+            };
+        feeTable?:
+          | T
+          | {
+              title?: T;
+              htmlContent?: T;
               id?: T;
               blockName?: T;
             };
