@@ -17,6 +17,29 @@ export const Courses: CollectionConfig = {
   fields: [
     { name: 'title', type: 'text', required: true, label: 'Course title (e.g. "BBA Business Analytics")' },
     { name: 'slug', type: 'text', required: true, unique: true, admin: { description: 'URL path, e.g. bba-business-analytics — hyphens, not slashes.' } },
+    {
+      name: 'meta',
+      type: 'group',
+      label: 'SEO',
+      fields: [
+        {
+          name: 'title',
+          type: 'text',
+          label: 'SEO title',
+          admin: {
+            description: 'Shown as the page title in browser tabs and Google results (aim for under 60 characters). Falls back to the hero title if left empty.',
+          },
+        },
+        {
+          name: 'description',
+          type: 'textarea',
+          label: 'SEO description',
+          admin: {
+            description: 'Snippet shown under the title in Google results (aim for 150–160 characters). Falls back to the hero description if left empty.',
+          },
+        },
+      ],
+    },
     { name: 'program', type: 'text', admin: { description: 'e.g. "BBA", "BTech", "MBA"' } },
     { name: 'school', type: 'text', admin: { description: 'e.g. "School of Management"' } },
     {

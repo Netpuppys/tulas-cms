@@ -190,6 +190,16 @@ export interface Course {
    * URL path, e.g. bba-business-analytics — hyphens, not slashes.
    */
   slug: string;
+  meta?: {
+    /**
+     * Shown as the page title in browser tabs and Google results (aim for under 60 characters). Falls back to the hero title if left empty.
+     */
+    title?: string | null;
+    /**
+     * Snippet shown under the title in Google results (aim for 150–160 characters). Falls back to the hero description if left empty.
+     */
+    description?: string | null;
+  };
   /**
    * e.g. "BBA", "BTech", "MBA"
    */
@@ -307,14 +317,6 @@ export interface Course {
             description2?: string | null;
             quote?: string | null;
             table?: {
-              /**
-               * Heading shown above the programs table. Optional.
-               */
-              title?: string | null;
-              /**
-               * Short paragraph shown under the heading, above the table. Optional.
-               */
-              description?: string | null;
               headers?: string[] | null;
               rows?:
                 | {
