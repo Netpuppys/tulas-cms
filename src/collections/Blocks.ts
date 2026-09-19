@@ -139,6 +139,8 @@ export const OverviewBlock: Block = {
       name: 'table',
       type: 'group',
       fields: [
+        { name: 'title', type: 'text', admin: { description: 'Heading shown above the programs table. Optional.' } },
+        { name: 'description', type: 'textarea', admin: { description: 'Short paragraph shown under the heading, above the table. Optional.' } },
         { name: 'headers', type: 'text', hasMany: true },
         {
           name: 'rows',

@@ -307,6 +307,14 @@ export interface Course {
             description2?: string | null;
             quote?: string | null;
             table?: {
+              /**
+               * Heading shown above the programs table. Optional.
+               */
+              title?: string | null;
+              /**
+               * Short paragraph shown under the heading, above the table. Optional.
+               */
+              description?: string | null;
               headers?: string[] | null;
               rows?:
                 | {
