@@ -27,7 +27,7 @@ export const Courses: CollectionConfig = {
           type: 'text',
           label: 'SEO title',
           admin: {
-            description: 'Shown as the page title in browser tabs and Google results (aim for under 60 characters). Falls back to the hero title if left empty.',
+            description: 'Shown exactly as typed as the page title in browser tabs and Google results — include the brand yourself, e.g. "... | Tulas University" (aim for under 60 characters). If left empty, the hero title is used and " | Tulas University" is added automatically.',
           },
         },
         {

@@ -192,7 +192,7 @@ export interface Course {
   slug: string;
   meta?: {
     /**
-     * Shown as the page title in browser tabs and Google results (aim for under 60 characters). Falls back to the hero title if left empty.
+     * Shown exactly as typed as the page title in browser tabs and Google results — include the brand yourself, e.g. "... | Tulas University" (aim for under 60 characters). If left empty, the hero title is used and " | Tulas University" is added automatically.
      */
     title?: string | null;
     /**
