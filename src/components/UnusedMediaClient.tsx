@@ -7,6 +7,11 @@ import type { UnusedMediaItem } from '../lib/unusedMedia'
 
 const MODAL_SLUG = 'unused-media-confirm'
 
+// How many files go in one delete request. Requests are sent one after
+// another, so this is also the most that is ever in flight at once. Raise it
+// for a faster (but heavier) clean-up, lower it if the database struggles.
+const BATCH_SIZE = 10
+
 type DeleteResponse = {
   deleted: number
   skipped: string[]
@@ -41,6 +46,9 @@ export default function UnusedMediaClient() {
   const apiRoute = `${config.serverURL ?? ''}${config.routes.api}`
 
   const [items, setItems] = useState<UnusedMediaItem[] | null>(null)
+  // When the server last scanned for unused media. Sent back with each delete
+  // so the server only has to re-check what was edited after this moment.
+  const [scannedAt, setScannedAt] = useState<string | null>(null)
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [loadError, setLoadError] = useState<string | null>(null)
   // What the open confirmation dialog is about to delete, and how far along it is.
@@ -55,6 +63,7 @@ export default function UnusedMediaClient() {
       const json = await res.json()
       if (!res.ok) throw new Error(json.message || 'Request failed')
       setItems(json.docs as UnusedMediaItem[])
+      setScannedAt(json.scannedAt ?? null)
       setSelected(new Set())
     } catch (err) {
       setLoadError(err instanceof Error ? err.message : 'Could not load unused media.')
@@ -83,8 +92,12 @@ export default function UnusedMediaClient() {
     openModal(MODAL_SLUG)
   }
 
-  // The server only deletes as many as fit in one request and returns the
-  // rest as `remaining`, so keep sending until nothing is left.
+  // Files are sent in small batches, strictly one request at a time - never
+  // all at once. Each file is a round trip to S3 plus a DB write, so firing
+  // 80 together would pile up on the (small, shared) database and hit the
+  // serverless request limits; ten at a time keeps every request short. The
+  // server may still hand some of a batch back as `remaining` if it runs out
+  // of time, which simply goes back on the front of the queue.
   const runDelete = async () => {
     if (!pending) return
     const total = pending.ids.length
@@ -95,32 +108,51 @@ export default function UnusedMediaClient() {
     setProgress({ done: 0, total })
 
     while (queue.length > 0) {
+      const batch = queue.slice(0, BATCH_SIZE)
+      const rest = queue.slice(BATCH_SIZE)
+
       let json: DeleteResponse
       try {
         const res = await fetch(`${apiRoute}/media-cleanup/delete`, {
           method: 'POST',
           credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ids: queue }),
+          body: JSON.stringify({ ids: batch, scannedAt }),
         })
-        json = await res.json()
-        if (!res.ok) throw new Error(json.message || 'Request failed')
+        const text = await res.text()
+        let parsed: Partial<DeleteResponse> = {}
+        try {
+          parsed = JSON.parse(text)
+        } catch {
+          // Not JSON - e.g. a gateway timeout page. Handled by the status check below.
+        }
+        if (!res.ok) {
+          throw new Error(parsed.message || (res.status === 504 ? 'The server timed out.' : `Server error (${res.status}).`))
+        }
+        json = parsed as DeleteResponse
       } catch (err) {
-        failures.push(err instanceof Error ? err.message : 'Request failed')
+        // Stop at the first failed request instead of firing the rest of the queue at a struggling server.
+        failures.push(err instanceof Error ? err.message : 'Request failed.')
         break
       }
+
       deleted += json.deleted
       skipped += json.skipped.length
       failures.push(...json.failed.map((f) => f.message))
-      setProgress({ done: total - json.remaining.length, total })
-      // Guard against a stuck loop if the server made no progress at all.
-      if (json.remaining.length >= queue.length) break
-      queue = json.remaining
+
+      // If the server handed back the whole batch untouched it made no progress; stop rather than loop forever.
+      if (json.remaining.length >= batch.length) {
+        failures.push('The server did not process any files. Please try again.')
+        break
+      }
+      queue = [...json.remaining, ...rest]
+      setProgress({ done: total - queue.length, total })
     }
 
     if (deleted > 0) toast.success(`Deleted ${deleted} unused ${deleted === 1 ? 'file' : 'files'}.`)
     if (skipped > 0) toast.info(`${skipped} ${skipped === 1 ? 'file was' : 'files were'} attached somewhere in the meantime and kept.`)
-    if (failures.length > 0) toast.error(`${failures.length} could not be deleted: ${failures[0]}`)
+    if (failures.length > 0) toast.error(`Some files could not be deleted: ${failures[0]}`)
+    if (deleted === 0 && skipped === 0 && failures.length === 0) toast.info('Nothing was deleted.')
 
     setPending(null)
     setProgress(null)

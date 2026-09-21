@@ -1,4 +1,4 @@
-import type { Payload } from 'payload'
+import type { Payload, Where } from 'payload'
 
 export type UnusedMediaItem = {
   id: string
@@ -9,6 +9,8 @@ export type UnusedMediaItem = {
   filesize: number
   createdAt: string
 }
+
+export type MediaKey = { id: string; filename: string }
 
 // --- How "unused" is decided ---------------------------------------------
 // An image counts as USED if anything stored in the CMS still points at it,
@@ -36,6 +38,15 @@ export type UnusedMediaItem = {
 //
 // NOT covered, by nature: anything outside this CMS's database - e.g. an
 // image URL hard-coded in the public website's source code.
+//
+// --- Full scan vs. "changed since" scan ----------------------------------
+// The full scan reads every document, which is slow on a real database. It
+// runs once, when the Unused Media page loads. Deleting then happens in
+// small batches, and re-running the full scan for each batch would make a
+// big delete crawl (and hammer the database). Instead each batch only
+// re-checks documents edited SINCE the page's scan (`updatedAt`): anything
+// untouched since then can't have started referencing an image, so this is
+// exactly as safe as a full re-scan, at a tiny fraction of the cost.
 // --------------------------------------------------------------------------
 
 const OBJECT_ID = /\b[0-9a-f]{24}\b/gi
@@ -46,6 +57,9 @@ const OBJECT_ID = /\b[0-9a-f]{24}\b/gi
 const FILE_TOKEN = /[^\s"'\\?#<>()/,;=]+\.[a-z0-9]{2,5}\b/gi
 
 const PAGE_SIZE = 100
+
+// Collections that are not real content and never hold references.
+const SKIPPED_COLLECTIONS = new Set(['media', 'unused-media'])
 
 type References = {
   ids: Set<string>
@@ -70,8 +84,10 @@ async function scanDocuments(
   payload: Payload,
   collection: string,
   draft: boolean,
+  since: Date | undefined,
   onText: (text: string) => void,
 ) {
+  const where: Where | undefined = since ? { updatedAt: { greater_than_equal: since.toISOString() } } : undefined
   let page = 1
   for (;;) {
     const result = await payload.find({
@@ -81,6 +97,7 @@ async function scanDocuments(
       limit: PAGE_SIZE,
       overrideAccess: true,
       page,
+      where,
     })
     for (const doc of result.docs) onText(JSON.stringify(doc))
     if (!result.hasNextPage) break
@@ -88,7 +105,10 @@ async function scanDocuments(
   }
 }
 
-async function collectReferences(payload: Payload, keepTexts: boolean): Promise<References> {
+// `since` limits the scan to documents edited at/after that time. Globals
+// are always read in full - there are only ever a handful, and they aren't
+// filterable by date.
+async function collectReferences(payload: Payload, keepTexts: boolean, since?: Date): Promise<References> {
   const refs: References = { ids: new Set(), filenames: new Set(), texts: [] }
 
   const onText = (text: string) => {
@@ -98,11 +118,12 @@ async function collectReferences(payload: Payload, keepTexts: boolean): Promise<
   }
 
   for (const collection of payload.config.collections) {
-    // `unused-media` is only the admin entry for this feature, it holds no data.
-    if (collection.slug === 'media' || collection.slug === 'unused-media') continue
-    await scanDocuments(payload, collection.slug, false, onText)
+    if (SKIPPED_COLLECTIONS.has(collection.slug)) continue
+    // No `updatedAt` on this collection to filter by -> read all of it.
+    const collectionSince = collection.timestamps === false ? undefined : since
+    await scanDocuments(payload, collection.slug, false, collectionSince, onText)
     if (collection.versions && collection.versions.drafts) {
-      await scanDocuments(payload, collection.slug, true, onText)
+      await scanDocuments(payload, collection.slug, true, collectionSince, onText)
     }
   }
 
@@ -117,7 +138,24 @@ async function collectReferences(payload: Payload, keepTexts: boolean): Promise<
   return refs
 }
 
-export async function findUnusedMedia(payload: Payload): Promise<UnusedMediaItem[]> {
+// Which of `media` are referenced by anything in `refs`.
+function referencedAmong(media: MediaKey[], refs: References): Set<string> {
+  const used = new Set<string>()
+  for (const m of media) {
+    const name = m.filename.toLowerCase()
+    if (refs.ids.has(m.id.toLowerCase()) || (name && refs.filenames.has(name))) {
+      used.add(m.id)
+    } else if (/\s/.test(name)) {
+      const encoded = encodeURIComponent(name)
+      if (refs.texts.some((text) => text.includes(name) || text.includes(encoded))) used.add(m.id)
+    }
+  }
+  return used
+}
+
+const hasSpacedName = (media: MediaKey[]) => media.some((m) => /\s/.test(m.filename))
+
+async function listAllMedia(payload: Payload): Promise<UnusedMediaItem[]> {
   const all: UnusedMediaItem[] = []
   let page = 1
   for (;;) {
@@ -144,25 +182,42 @@ export async function findUnusedMedia(payload: Payload): Promise<UnusedMediaItem
     if (!result.hasNextPage) break
     page += 1
   }
+  return all
+}
 
-  if (all.length === 0) return []
+// The slow, complete check. `scannedAt` is taken BEFORE reading anything, so
+// a document edited while the scan is running is still caught by a later
+// `findReferencedSince(..., scannedAt)`.
+export async function findUnusedMedia(payload: Payload): Promise<{ items: UnusedMediaItem[]; scannedAt: string }> {
+  const scannedAt = new Date().toISOString()
+  const all = await listAllMedia(payload)
+  if (all.length === 0) return { items: [], scannedAt }
 
-  const spacedNames = all.filter((m) => /\s/.test(m.filename)).map((m) => m.filename.toLowerCase())
-  const refs = await collectReferences(payload, spacedNames.length > 0)
+  const refs = await collectReferences(payload, hasSpacedName(all))
+  const used = referencedAmong(all, refs)
+  return { items: all.filter((m) => !used.has(m.id)), scannedAt }
+}
 
-  const usedBySpacedName = new Set<string>()
-  for (const name of spacedNames) {
-    const encoded = encodeURIComponent(name)
-    if (refs.texts.some((text) => text.includes(name) || text.includes(encoded))) {
-      usedBySpacedName.add(name)
-    }
-  }
+// The fast re-check used before each delete batch: of `media`, which are
+// referenced by any document edited at/after `since`.
+export async function findReferencedSince(payload: Payload, media: MediaKey[], since: Date): Promise<Set<string>> {
+  if (media.length === 0) return new Set()
+  const refs = await collectReferences(payload, hasSpacedName(media), since)
+  return referencedAmong(media, refs)
+}
 
-  return all.filter((media) => {
-    const name = media.filename.toLowerCase()
-    if (refs.ids.has(media.id.toLowerCase())) return false
-    if (name && refs.filenames.has(name)) return false
-    if (usedBySpacedName.has(name)) return false
-    return true
+// Looks up the filenames for a set of media ids. Ids that no longer exist
+// are simply absent from the result.
+export async function getMediaKeys(payload: Payload, ids: string[]): Promise<MediaKey[]> {
+  if (ids.length === 0) return []
+  const result = await payload.find({
+    collection: 'media',
+    depth: 0,
+    limit: ids.length,
+    overrideAccess: true,
+    pagination: false,
+    select: { filename: true },
+    where: { id: { in: ids } },
   })
+  return result.docs.map((doc) => ({ id: String(doc.id), filename: doc.filename ?? '' }))
 }
