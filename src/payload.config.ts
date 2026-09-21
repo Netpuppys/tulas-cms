@@ -17,6 +17,7 @@ import { Trendsetters } from './collections/Trendsetters'
 import { AcademicNotifications } from './collections/AcademicNotifications'
 import { Events } from './collections/Events'
 import { BlogPosts } from './collections/BlogPosts'
+import { deleteUnusedMediaEndpoint, listUnusedMediaEndpoint } from './endpoints/unusedMedia'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -42,12 +43,22 @@ admin: {
       Logo: '/components/AdminLogo#default',
       Icon: '/components/AdminLogo#default',
     },
+    // "Unused Media": a second page next to the Media collection that lists
+    // every file nothing in the CMS references, with select + empty-trash.
+    afterNavLinks: ['/components/UnusedMediaNavLink#default'],
+    views: {
+      unusedMedia: {
+        Component: '/components/UnusedMediaView#default',
+        path: '/unused-media',
+      },
+    },
   },
   importMap: {
     baseDir: path.resolve(dirname),
   },
 },
   collections: [Users, Media, Courses, FeeStructures, Articles, Placements, PlacementHero, Trendsetters, AcademicNotifications, Events, BlogPosts],
+  endpoints: [listUnusedMediaEndpoint, deleteUnusedMediaEndpoint],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',
   typescript: {
