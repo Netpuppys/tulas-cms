@@ -15,7 +15,7 @@ export const Articles: CollectionConfig = {
   admin: {
     useAsTitle: 'title',
     defaultColumns: ['title', 'category', 'heroPosition', 'status', 'publishedDate'],
-    group: 'Media / News',
+    group: 'Articles / News',
     description:
       'News articles for the /media page. At most one article should be set to each Hero Position (Large / Small 1 / Small 2) at a time — the rest should be "None" and will show in the regular feed.',
   },

@@ -15,7 +15,7 @@ export const ExternalArticles: CollectionConfig = {
   admin: {
     useAsTitle: 'title',
     defaultColumns: ['title', 'link', 'updatedAt'],
-    group: 'Media / News',
+    group: 'Articles / News',
     description:
       'Curated links to external press coverage, Independent of the Articles collection — add real published stories here.',
   },
