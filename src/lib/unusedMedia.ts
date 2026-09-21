@@ -98,7 +98,8 @@ async function collectReferences(payload: Payload, keepTexts: boolean): Promise<
   }
 
   for (const collection of payload.config.collections) {
-    if (collection.slug === 'media') continue
+    // `unused-media` is only the admin entry for this feature, it holds no data.
+    if (collection.slug === 'media' || collection.slug === 'unused-media') continue
     await scanDocuments(payload, collection.slug, false, onText)
     if (collection.versions && collection.versions.drafts) {
       await scanDocuments(payload, collection.slug, true, onText)

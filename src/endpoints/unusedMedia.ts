@@ -13,7 +13,7 @@ const unauthorized = () =>
   Response.json({ message: 'You must be logged in.' }, { status: httpStatus.UNAUTHORIZED })
 
 export const listUnusedMediaEndpoint: Endpoint = {
-  path: '/unused-media',
+  path: '/media-cleanup/unused',
   method: 'get',
   handler: async (req) => {
     if (!req.user) return unauthorized()
@@ -28,7 +28,7 @@ export const listUnusedMediaEndpoint: Endpoint = {
 }
 
 export const deleteUnusedMediaEndpoint: Endpoint = {
-  path: '/unused-media/delete',
+  path: '/media-cleanup/delete',
   method: 'post',
   handler: async (req) => {
     if (!req.user) return unauthorized()

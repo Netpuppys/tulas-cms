@@ -8,6 +8,7 @@ import sharp from 'sharp'
 
 import { Users } from './collections/Users'
 import { Media } from './collections/Media'
+import { UnusedMedia } from './collections/UnusedMedia'
 import { Courses } from './collections/Courses'
 import { FeeStructures } from './collections/FeeStructures'
 import { Articles } from './collections/Articles'
@@ -43,21 +44,12 @@ admin: {
       Logo: '/components/AdminLogo#default',
       Icon: '/components/AdminLogo#default',
     },
-    // "Unused Media": a second page next to the Media collection that lists
-    // every file nothing in the CMS references, with select + empty-trash.
-    afterNavLinks: ['/components/UnusedMediaNavLink#default'],
-    views: {
-      unusedMedia: {
-        Component: '/components/UnusedMediaView#default',
-        path: '/unused-media',
-      },
-    },
   },
   importMap: {
     baseDir: path.resolve(dirname),
   },
 },
-  collections: [Users, Media, Courses, FeeStructures, Articles, Placements, PlacementHero, Trendsetters, AcademicNotifications, Events, BlogPosts],
+  collections: [Users, Media, UnusedMedia, Courses, FeeStructures, Articles, Placements, PlacementHero, Trendsetters, AcademicNotifications, Events, BlogPosts],
   endpoints: [listUnusedMediaEndpoint, deleteUnusedMediaEndpoint],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',

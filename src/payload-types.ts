@@ -69,6 +69,7 @@ export interface Config {
   collections: {
     users: User;
     media: Media;
+    'unused-media': UnusedMedia;
     courses: Course;
     'fee-structures': FeeStructure;
     articles: Article;
@@ -87,6 +88,7 @@ export interface Config {
   collectionsSelect: {
     users: UsersSelect<false> | UsersSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
+    'unused-media': UnusedMediaSelect<false> | UnusedMediaSelect<true>;
     courses: CoursesSelect<false> | CoursesSelect<true>;
     'fee-structures': FeeStructuresSelect<false> | FeeStructuresSelect<true>;
     articles: ArticlesSelect<false> | ArticlesSelect<true>;
@@ -178,6 +180,13 @@ export interface Media {
   height?: number | null;
   focalX?: number | null;
   focalY?: number | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "unused-media".
+ */
+export interface UnusedMedia {
+  id: string;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1016,6 +1025,10 @@ export interface PayloadLockedDocument {
         value: string | Media;
       } | null)
     | ({
+        relationTo: 'unused-media';
+        value: string | UnusedMedia;
+      } | null)
+    | ({
         relationTo: 'courses';
         value: string | Course;
       } | null)
@@ -1135,11 +1148,22 @@ export interface MediaSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "unused-media_select".
+ */
+export interface UnusedMediaSelect<T extends boolean = true> {}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "courses_select".
  */
 export interface CoursesSelect<T extends boolean = true> {
   title?: T;
   slug?: T;
+  meta?:
+    | T
+    | {
+        title?: T;
+        description?: T;
+      };
   program?: T;
   school?: T;
   status?: T;

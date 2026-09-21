@@ -1,6 +1,6 @@
 'use client'
 
-import { Button, ConfirmationModal, toast, useConfig, useModal } from '@payloadcms/ui'
+import { Button, ConfirmationModal, LoadingOverlay, toast, useConfig, useModal } from '@payloadcms/ui'
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 
 import type { UnusedMediaItem } from '../lib/unusedMedia'
@@ -51,7 +51,7 @@ export default function UnusedMediaClient() {
     setItems(null)
     setLoadError(null)
     try {
-      const res = await fetch(`${apiRoute}/unused-media`, { credentials: 'include' })
+      const res = await fetch(`${apiRoute}/media-cleanup/unused`, { credentials: 'include' })
       const json = await res.json()
       if (!res.ok) throw new Error(json.message || 'Request failed')
       setItems(json.docs as UnusedMediaItem[])
@@ -97,7 +97,7 @@ export default function UnusedMediaClient() {
     while (queue.length > 0) {
       let json: DeleteResponse
       try {
-        const res = await fetch(`${apiRoute}/unused-media/delete`, {
+        const res = await fetch(`${apiRoute}/media-cleanup/delete`, {
           method: 'POST',
           credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
@@ -169,7 +169,7 @@ export default function UnusedMediaClient() {
 
       {loadError && <p style={{ color: 'var(--theme-error-500)' }}>{loadError}</p>}
 
-      {items === null && <p style={styles.empty}>Checking which media is in use…</p>}
+      {items === null && <LoadingOverlay loadingText="Checking which media is in use…" />}
 
       {items !== null && count === 0 && !loadError && <p style={styles.empty}>No unused media. Everything is in use.</p>}
 
