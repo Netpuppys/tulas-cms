@@ -3,8 +3,9 @@ import type { CollectionConfig } from 'payload'
 // Powers the homepage "Upcoming Events" preview (soonest 4, upcoming only)
 // and the full /events gallery (all upcoming, same ordering). `date` is a
 // real date field (not free text) so both views can sort/filter reliably.
-// `link` is optional — the frontend only shows a "Register"/"Details"
-// button on a card when it's set.
+// `endDate` is optional and only set for multi-day events. `link` is
+// optional — the frontend only shows a "Register"/"Details" button on a
+// card when it's set.
 export const Events: CollectionConfig = {
   slug: 'events',
   labels: { singular: 'Event', plural: 'Events' },
@@ -25,7 +26,29 @@ export const Events: CollectionConfig = {
     { name: 'title', type: 'text', required: true },
     { name: 'description', type: 'textarea', admin: { description: 'Short summary shown on the /events card. Optional.' } },
     { name: 'author', type: 'text', label: 'Organizer', admin: { description: 'e.g. "Dept. of Computer Science". Optional.' } },
-    { name: 'date', type: 'date', required: true, index: true, admin: { date: { pickerAppearance: 'dayOnly' } } },
+    {
+      name: 'date',
+      type: 'date',
+      label: 'Start Date',
+      required: true,
+      index: true,
+      admin: { date: { pickerAppearance: 'dayOnly' } },
+    },
+    {
+      name: 'endDate',
+      type: 'date',
+      label: 'End Date',
+      admin: {
+        date: { pickerAppearance: 'dayOnly' },
+        description: 'Only needed if the event spans more than one day. Leave empty for single-day events.',
+      },
+      validate: (value: Date | null | undefined, { siblingData }: { siblingData: { date?: string } }) => {
+        if (value && siblingData?.date && new Date(value) < new Date(siblingData.date)) {
+          return 'End date must be on or after the start date.'
+        }
+        return true
+      },
+    },
     { name: 'timeline', type: 'text', admin: { description: 'e.g. "10:00 AM – 6:00 PM". Optional.' } },
     { name: 'location', type: 'text', admin: { description: 'e.g. "Innovation Hub, Block C". Optional.' } },
     { name: 'category', type: 'text', admin: { description: 'e.g. "Technical", "Cultural", "Sports". Optional.' } },

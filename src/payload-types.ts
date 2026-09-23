@@ -893,6 +893,10 @@ export interface Event {
   author?: string | null;
   date: string;
   /**
+   * Only needed if the event spans more than one day. Leave empty for single-day events.
+   */
+  endDate?: string | null;
+  /**
    * e.g. "10:00 AM – 6:00 PM". Optional.
    */
   timeline?: string | null;
@@ -1604,6 +1608,7 @@ export interface EventsSelect<T extends boolean = true> {
   description?: T;
   author?: T;
   date?: T;
+  endDate?: T;
   timeline?: T;
   location?: T;
   category?: T;
