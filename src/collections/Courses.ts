@@ -43,6 +43,37 @@ export const Courses: CollectionConfig = {
     { name: 'program', type: 'text', admin: { description: 'e.g. "BBA", "BTech", "MBA"' } },
     { name: 'school', type: 'text', admin: { description: 'e.g. "School of Management"' } },
     {
+      // Links this course page to one of the 9 placement buckets in the
+      // Placements collection, so its own page can show that bucket's
+      // student cards (same cards as the /placement-highlights page's
+      // per-course section) instead of an editor re-entering them here.
+      // Left empty, no placement section shows on this course's page - not
+      // every course maps to one of the 9 broad buckets (see the comment
+      // atop Placements.ts).
+      //
+      // IMPORTANT: these option values must stay in sync with the `course`
+      // field's options in Placements.ts - they're intentionally the same
+      // list, just optional here.
+      name: 'placementCourse',
+      type: 'select',
+      label: 'Placements section (optional)',
+      options: [
+        { label: 'BTech CSE', value: 'btech-cse' },
+        { label: 'BTech Core Branches', value: 'btech-core' },
+        { label: 'BBA', value: 'bba' },
+        { label: 'BCA', value: 'bca' },
+        { label: 'B.Com', value: 'bcom' },
+        { label: 'MBA', value: 'mba' },
+        { label: 'B.Sc Agriculture', value: 'bsc-agriculture' },
+        { label: 'BAJMC', value: 'bajmc' },
+        { label: 'MCA', value: 'mca' },
+      ],
+      admin: {
+        description:
+          'Which Placements course bucket this page should show a "Placement Highlights" section for. Leave empty to hide that section on this page.',
+      },
+    },
+    {
       name: 'status',
       type: 'select',
       defaultValue: 'draft',

@@ -217,6 +217,11 @@ export interface Course {
    * e.g. "School of Management"
    */
   school?: string | null;
+  /**
+   * Which Placements course bucket this page should show a "Placement Highlights" section for. Leave empty to hide that section on this page.
+   */
+  placementCourse?:
+    ('btech-cse' | 'btech-core' | 'bba' | 'bca' | 'bcom' | 'mba' | 'bsc-agriculture' | 'bajmc' | 'mca') | null;
   status?: ('draft' | 'published') | null;
   /**
    * Which tab (Undergraduate / Postgraduate / Diploma) this course appears under in the header menu.
@@ -1170,6 +1175,7 @@ export interface CoursesSelect<T extends boolean = true> {
       };
   program?: T;
   school?: T;
+  placementCourse?: T;
   status?: T;
   level?: T;
   department?: T;
