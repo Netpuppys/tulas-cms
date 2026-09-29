@@ -107,8 +107,12 @@ export interface Config {
     defaultIDType: string;
   };
   fallbackLocale: null;
-  globals: {};
-  globalsSelect: {};
+  globals: {
+    'home-intro': HomeIntro;
+  };
+  globalsSelect: {
+    'home-intro': HomeIntroSelect<false> | HomeIntroSelect<true>;
+  };
   locale: null;
   widgets: {
     collections: CollectionsWidget;
@@ -1694,6 +1698,73 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
   batch?: T;
   updatedAt?: T;
   createdAt?: T;
+}
+/**
+ * The "Best University in Dehradun" SEO block on the homepage — "Intro" always shows, "More" only appears once a visitor clicks "Read More".
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "home-intro".
+ */
+export interface HomeIntro {
+  id: string;
+  title: string;
+  highlight: string;
+  /**
+   * The paragraph(s) shown before "Read More" is clicked. Use '/' for headings, lists, etc.
+   */
+  intro: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  };
+  /**
+   * Everything else — extra paragraphs, sections, FAQs, whatever - write it freely, it all appears once "Read More" is clicked.
+   */
+  more?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  /**
+   * e.g. "UGC 2(f)", "AICTE", "NAAC A+" — shown as pills along the bottom of the card.
+   */
+  credentials?: string[] | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "home-intro_select".
+ */
+export interface HomeIntroSelect<T extends boolean = true> {
+  title?: T;
+  highlight?: T;
+  intro?: T;
+  more?: T;
+  credentials?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

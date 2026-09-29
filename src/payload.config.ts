@@ -18,6 +18,7 @@ import { Trendsetters } from './collections/Trendsetters'
 import { AcademicNotifications } from './collections/AcademicNotifications'
 import { Events } from './collections/Events'
 import { BlogPosts } from './collections/BlogPosts'
+import { HomeIntro } from './globals/HomeIntro'
 import { deleteUnusedMediaEndpoint, listUnusedMediaEndpoint } from './endpoints/unusedMedia'
 
 const filename = fileURLToPath(import.meta.url)
@@ -50,6 +51,7 @@ admin: {
   },
 },
   collections: [Users, Media, UnusedMedia, Courses, FeeStructures, Articles, Placements, PlacementHero, Trendsetters, AcademicNotifications, Events, BlogPosts],
+  globals: [HomeIntro],
   endpoints: [listUnusedMediaEndpoint, deleteUnusedMediaEndpoint],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',
