@@ -53,6 +53,24 @@ export const Events: CollectionConfig = {
     { name: 'location', type: 'text', admin: { description: 'e.g. "Innovation Hub, Block C". Optional.' } },
     { name: 'category', type: 'text', admin: { description: 'e.g. "Technical", "Cultural", "Sports". Optional.' } },
     {
+      // Powers the /events page's course filter (Common -> Schools ->
+      // department -> course). A relationship rather than a fixed select
+      // (like the old `school` field this replaces) because the filter now
+      // matches on an exact course, not just its department - the event's
+      // school is read off the linked course itself (course.department),
+      // not stored separately here. Optional: an event without a course
+      // still shows under "Common" (all events), it just won't appear
+      // once a specific course is selected in the filter.
+      name: 'course',
+      type: 'relationship',
+      relationTo: 'courses',
+      label: 'Course (optional)',
+      admin: {
+        description:
+          'Which specific course this event belongs to, for the /events page\'s course filter. Leave empty for a general/campus-wide event.',
+      },
+    },
+    {
       name: 'imageUrl',
       type: 'text',
       label: 'Image URL',

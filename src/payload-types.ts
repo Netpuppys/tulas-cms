@@ -914,6 +914,10 @@ export interface Event {
    */
   category?: string | null;
   /**
+   * Which specific course this event belongs to, for the /events page's course filter. Leave empty for a general/campus-wide event.
+   */
+  course?: (string | null) | Course;
+  /**
    * Takes priority over the upload field below.
    */
   imageUrl?: string | null;
@@ -1618,6 +1622,7 @@ export interface EventsSelect<T extends boolean = true> {
   timeline?: T;
   location?: T;
   category?: T;
+  course?: T;
   imageUrl?: T;
   image?: T;
   link?: T;
