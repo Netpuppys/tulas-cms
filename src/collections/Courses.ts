@@ -1,11 +1,12 @@
 import type { CollectionConfig } from 'payload'
 import { CourseBlocks } from './Blocks'
+import { publishedOrLoggedIn } from '../access/publishedOrLoggedIn'
 
 export const Courses: CollectionConfig = {
   slug: 'courses',
   access: {
-  read: () => true,
-},
+    read: publishedOrLoggedIn,
+  },
   admin: {
     useAsTitle: 'title',
     defaultColumns: ['title', 'level', 'department', 'slug', 'status', 'updatedAt'],
