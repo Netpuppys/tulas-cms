@@ -668,6 +668,36 @@ export interface Article {
       }[]
     | null;
   /**
+   * Photos from the event itself (separate from the newspaper clippings above) — shown as their own slider on the article page. Leave empty to hide it.
+   */
+  eventsGallery?:
+    | {
+        /**
+         * Takes priority over the upload field below.
+         */
+        imageUrl?: string | null;
+        /**
+         * Only used if the Photo URL above is empty.
+         */
+        image?: (string | null) | Media;
+        caption?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * YouTube or Vimeo links only (no uploads) — shown as embedded players on the article page. Leave empty to hide.
+   */
+  videos?:
+    | {
+        /**
+         * Paste the normal video link, e.g. https://www.youtube.com/watch?v=… or https://vimeo.com/…
+         */
+        url: string;
+        caption?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
    * Other sites that republished or covered this same story (e.g. NDTV, Times of India) — shown as "More from DevBhoomi Times" cards on this article's page. Scoped to this article only, not shared site-wide.
    */
   externalCoverage?:
@@ -1514,6 +1544,21 @@ export interface ArticlesSelect<T extends boolean = true> {
     | {
         imageUrl?: T;
         image?: T;
+        caption?: T;
+        id?: T;
+      };
+  eventsGallery?:
+    | T
+    | {
+        imageUrl?: T;
+        image?: T;
+        caption?: T;
+        id?: T;
+      };
+  videos?:
+    | T
+    | {
+        url?: T;
         caption?: T;
         id?: T;
       };

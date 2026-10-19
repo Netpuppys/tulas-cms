@@ -99,6 +99,58 @@ export const Articles: CollectionConfig = {
       ],
     },
     {
+      name: 'eventsGallery',
+      type: 'array',
+      label: 'Events Gallery',
+      admin: {
+        description:
+          'Photos from the event itself (separate from the newspaper clippings above) — shown as their own slider on the article page. Leave empty to hide it.',
+      },
+      fields: [
+        {
+          name: 'imageUrl',
+          type: 'text',
+          label: 'Photo URL',
+          admin: { description: 'Takes priority over the upload field below.' },
+        },
+        {
+          name: 'image',
+          type: 'upload',
+          relationTo: 'media',
+          label: 'Photo upload',
+          admin: { description: 'Only used if the Photo URL above is empty.' },
+        },
+        { name: 'caption', type: 'text' },
+      ],
+    },
+    {
+      name: 'videos',
+      type: 'array',
+      label: 'Event Videos',
+      admin: {
+        description:
+          'YouTube or Vimeo links only (no uploads) — shown as embedded players on the article page. Leave empty to hide.',
+      },
+      fields: [
+        {
+          name: 'url',
+          type: 'text',
+          required: true,
+          label: 'YouTube / Vimeo link',
+          admin: { description: 'Paste the normal video link, e.g. https://www.youtube.com/watch?v=… or https://vimeo.com/…' },
+          validate: (value: string | null | undefined) => {
+            if (!value) return 'Video link is required'
+            return /^https?:\/\/((www\.|m\.)?youtube\.com\/(watch|embed|shorts)|youtu\.be\/|(www\.|player\.)?vimeo\.com\/)/i.test(
+              value.trim(),
+            )
+              ? true
+              : 'Only YouTube or Vimeo links are allowed'
+          },
+        },
+        { name: 'caption', type: 'text' },
+      ],
+    },
+    {
       name: 'externalCoverage',
       type: 'array',
       label: 'Also Published On',
