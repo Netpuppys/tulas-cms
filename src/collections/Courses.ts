@@ -1,6 +1,7 @@
 import type { CollectionConfig } from 'payload'
 import { CourseBlocks } from './Blocks'
 import { publishedOrLoggedIn } from '../access/publishedOrLoggedIn'
+import { SCHOOL_OPTIONS } from '../lib/schools'
 
 export const Courses: CollectionConfig = {
   slug: 'courses',
@@ -110,15 +111,7 @@ export const Courses: CollectionConfig = {
       type: 'select',
       required: true,
       label: 'Nav Department',
-      options: [
-        { label: 'School Of Management & Commerce', value: 'School Of Management & Commerce' },
-        { label: 'School Of Engineering', value: 'School Of Engineering' },
-        { label: 'School Of Computer Applications', value: 'School Of Computer Applications' },
-        { label: 'School Of Mass Comm. & Journalism', value: 'School Of Mass Comm. & Journalism' },
-        { label: 'School Of Pharmacy', value: 'School Of Pharmacy' },
-        { label: 'School Of Law', value: 'School Of Law' },
-        { label: 'School Of Agriculture', value: 'School Of Agriculture' },
-      ],
+      options: [...SCHOOL_OPTIONS],
       admin: {
         description: 'Which department column this course is grouped under in the header menu. This is a display/UX grouping only — it does not need to match the "school" field above exactly.',
       },

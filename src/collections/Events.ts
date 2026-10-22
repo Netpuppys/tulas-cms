@@ -1,4 +1,5 @@
 import type { CollectionConfig } from 'payload'
+import { SCHOOL_OPTIONS } from '../lib/schools'
 
 // Powers the homepage "Upcoming Events" preview (soonest 4, upcoming only)
 // and the full /events gallery (all upcoming, same ordering). `date` is a
@@ -54,20 +55,35 @@ export const Events: CollectionConfig = {
     { name: 'category', type: 'text', admin: { description: 'e.g. "Technical", "Cultural", "Sports". Optional.' } },
     {
       // Powers the /events page's course filter (Common -> Schools ->
-      // department -> course). A relationship rather than a fixed select
-      // (like the old `school` field this replaces) because the filter now
-      // matches on an exact course, not just its department - the event's
-      // school is read off the linked course itself (course.department),
-      // not stored separately here. Optional: an event without a course
-      // still shows under "Common" (all events), it just won't appear
-      // once a specific course is selected in the filter.
+      // department -> course). Picking a school alone scopes the event to
+      // every course in that school; `course` narrows it down further to
+      // specific courses within that school. Both optional: an event with
+      // neither still shows under "Common" (all events).
+      name: 'school',
+      type: 'select',
+      label: 'School (optional)',
+      options: [...SCHOOL_OPTIONS],
+      admin: {
+        description:
+          'Scopes this event to every course in this school. Leave empty for a general/campus-wide event, or pick specific courses below to narrow it down further.',
+      },
+    },
+    {
+      // Filtered (admin-UI only) to the school selected above, if any - the
+      // field still stores plain course relationships, so the filter is
+      // just a convenience for finding the right courses faster.
       name: 'course',
       type: 'relationship',
       relationTo: 'courses',
-      label: 'Course (optional)',
+      hasMany: true,
+      label: 'Courses (optional)',
+      filterOptions: ({ siblingData }) => {
+        const school = (siblingData as { school?: string } | undefined)?.school
+        return school ? { department: { equals: school } } : true
+      },
       admin: {
         description:
-          'Which specific course this event belongs to, for the /events page\'s course filter. Leave empty for a general/campus-wide event.',
+          'Select one or more specific courses, e.g. only "BBA Business Analytics" instead of the whole School. Leave empty to apply to every course in the School above (or campus-wide if no School is selected either).',
       },
     },
     {

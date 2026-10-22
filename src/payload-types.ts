@@ -948,9 +948,23 @@ export interface Event {
    */
   category?: string | null;
   /**
-   * Which specific course this event belongs to, for the /events page's course filter. Leave empty for a general/campus-wide event.
+   * Scopes this event to every course in this school. Leave empty for a general/campus-wide event, or pick specific courses below to narrow it down further.
    */
-  course?: (string | null) | Course;
+  school?:
+    | (
+        | 'School Of Management & Commerce'
+        | 'School Of Engineering'
+        | 'School Of Computer Applications'
+        | 'School Of Mass Comm. & Journalism'
+        | 'School Of Pharmacy'
+        | 'School Of Law'
+        | 'School Of Agriculture'
+      )
+    | null;
+  /**
+   * Select one or more specific courses, e.g. only "BBA Business Analytics" instead of the whole School. Leave empty to apply to every course in the School above (or campus-wide if no School is selected either).
+   */
+  course?: (string | Course)[] | null;
   /**
    * Takes priority over the upload field below.
    */
@@ -1671,6 +1685,7 @@ export interface EventsSelect<T extends boolean = true> {
   timeline?: T;
   location?: T;
   category?: T;
+  school?: T;
   course?: T;
   imageUrl?: T;
   image?: T;
