@@ -1,0 +1,5 @@
+// Password resets by email are disabled (see beforeOperation in
+// src/collections/Users.ts), so hide the "Forgot password?" link.
+.login__form a[href*='forgot'] {
+  display: none;
+}

@@ -28,6 +28,19 @@ export const Users: CollectionConfig = {
     delete: superAdminOnly,
   },
   hooks: {
+    beforeOperation: [
+      ({ args, operation }) => {
+        // Password resets by email are only allowed for the super admin;
+        // everyone else has to ask them to change it.
+        if (
+          operation === 'forgotPassword' &&
+          args.data?.email?.toLowerCase() !== SUPER_ADMIN_EMAIL
+        ) {
+          throw new Forbidden()
+        }
+        return args
+      },
+    ],
     beforeChange: [
       ({ data, operation, originalDoc, req }) => {
         // No req.user means a server-side script (local API); access
@@ -57,6 +70,17 @@ export const Users: CollectionConfig = {
   },
   fields: [
     // Email added by default
-    // Add more fields as needed
+    // Not stored - Payload's admin UI reads this field's access to decide
+    // whether to show the "Change Password" button on a user. Create stays
+    // open so new users can still be given a password.
+    {
+      name: 'password',
+      type: 'text',
+      virtual: true,
+      hidden: true,
+      access: {
+        update: ({ req }) => isSuperAdmin(req.user),
+      },
+    },
   ],
 }
