@@ -1,5 +1,15 @@
-import type { CollectionConfig } from 'payload'
+import type { CollectionConfig, SelectFieldSingleValidation } from 'payload'
+import { select } from 'payload/shared'
 import { SCHOOL_OPTIONS } from '../lib/schools'
+
+const isSchoolEvent = (doc?: { school?: unknown; course?: unknown }) =>
+  Boolean(doc?.school) || (Array.isArray(doc?.course) && doc.course.length > 0)
+
+const validateSchool: SelectFieldSingleValidation = (value, options) => {
+  const { eventScope } = options.siblingData as { eventScope?: string }
+  if (!value && eventScope === 'school') return 'Pick a school, or set Event Type to Common Event.'
+  return select(value, options)
+}
 
 // Powers the homepage "Upcoming Events" preview (soonest 4, upcoming only)
 // and the full /events gallery (all upcoming, same ordering). `date` is a
@@ -54,36 +64,75 @@ export const Events: CollectionConfig = {
     { name: 'location', type: 'text', admin: { description: 'e.g. "Innovation Hub, Block C". Optional.' } },
     { name: 'category', type: 'text', admin: { description: 'e.g. "Technical", "Cultural", "Sports". Optional.' } },
     {
-      // Powers the /events page's course filter (Common -> Schools ->
-      // department -> course). Picking a school alone scopes the event to
-      // every course in that school; `course` narrows it down further to
-      // specific courses within that school. Both optional: an event with
-      // neither still shows under "Common" (all events).
-      name: 'school',
-      type: 'select',
-      label: 'School (optional)',
-      options: [...SCHOOL_OPTIONS],
+      // The radio editors actually use to scope an event. Virtual, because
+      // `school`/`course` already say everything: no school and no courses
+      // means Common, so events saved before this field existed need no
+      // migration and tulas_rev keeps reading the same two fields.
+      name: 'eventScope',
+      type: 'radio',
+      label: 'Event Type',
+      virtual: true,
+      defaultValue: 'common',
+      options: [
+        { label: 'Common Event', value: 'common' },
+        { label: 'School', value: 'school' },
+      ],
       admin: {
+        // Virtual fields are read-only in the admin unless told otherwise.
+        readOnly: false,
+        layout: 'horizontal',
+        // Not stored, so there's nothing for a list filter to query.
+        disableListFilter: true,
         description:
-          'Scopes this event to every course in this school. Leave empty for a general/campus-wide event, or pick specific courses below to narrow it down further.',
+          'Common Event is campus-wide. School scopes it to a school, or to specific courses in that school.',
+      },
+      hooks: {
+        afterRead: [({ siblingData }) => (isSchoolEvent(siblingData) ? 'school' : 'common')],
+        beforeValidate: [
+          // Reads siblingData rather than the hook's `value`, which is filled
+          // in with the default when the field wasn't sent - a partial update
+          // that only sets `school` must not wipe it.
+          ({ siblingData }) => {
+            if (siblingData?.eventScope === 'common') {
+              siblingData.school = null
+              siblingData.course = []
+            }
+          },
+        ],
       },
     },
     {
-      // Filtered (admin-UI only) to the school selected above, if any - the
-      // field still stores plain course relationships, so the filter is
-      // just a convenience for finding the right courses faster.
+      // Powers the /events page's course filter (Common -> Schools ->
+      // department -> course). Picking a school alone scopes the event to
+      // every course in that school; `course` narrows it down further to
+      // specific courses within that school.
+      name: 'school',
+      type: 'select',
+      label: 'School',
+      options: [...SCHOOL_OPTIONS],
+      validate: validateSchool,
+      admin: {
+        condition: (_, siblingData) => siblingData?.eventScope === 'school',
+        description: 'Scopes this event to every course in this school, or pick specific courses below to narrow it down further.',
+      },
+    },
+    {
+      // Filtered to the school selected above - the field still stores plain
+      // course relationships, so the filter is just a convenience for finding
+      // the right courses faster (and rejects courses from another school).
       name: 'course',
       type: 'relationship',
       relationTo: 'courses',
       hasMany: true,
-      label: 'Courses (optional)',
+      label: 'Courses',
       filterOptions: ({ siblingData }) => {
         const school = (siblingData as { school?: string } | undefined)?.school
         return school ? { department: { equals: school } } : true
       },
       admin: {
+        condition: (_, siblingData) => siblingData?.eventScope === 'school' && Boolean(siblingData?.school),
         description:
-          'Select one or more specific courses, e.g. only "BBA Business Analytics" instead of the whole School. Leave empty to apply to every course in the School above (or campus-wide if no School is selected either).',
+          'Select one or more specific courses, e.g. only "BBA Business Analytics" instead of the whole School. Leave empty to apply to every course in the School above.',
       },
     },
     {

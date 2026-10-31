@@ -590,7 +590,11 @@ export interface Event {
    */
   category?: string | null;
   /**
-   * Scopes this event to every course in this school. Leave empty for a general/campus-wide event, or pick specific courses below to narrow it down further.
+   * Common Event is campus-wide. School scopes it to a school, or to specific courses in that school.
+   */
+  eventScope?: ('common' | 'school') | null;
+  /**
+   * Scopes this event to every course in this school, or pick specific courses below to narrow it down further.
    */
   school?:
     | (
@@ -604,7 +608,7 @@ export interface Event {
       )
     | null;
   /**
-   * Select one or more specific courses, e.g. only "BBA Business Analytics" instead of the whole School. Leave empty to apply to every course in the School above (or campus-wide if no School is selected either).
+   * Select one or more specific courses, e.g. only "BBA Business Analytics" instead of the whole School. Leave empty to apply to every course in the School above.
    */
   course?: (string | Course)[] | null;
   /**
@@ -1699,6 +1703,7 @@ export interface EventsSelect<T extends boolean = true> {
   timeline?: T;
   location?: T;
   category?: T;
+  eventScope?: T;
   school?: T;
   course?: T;
   imageUrl?: T;
