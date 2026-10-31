@@ -101,7 +101,7 @@ export const Articles: CollectionConfig = {
     {
       name: 'eventsGallery',
       type: 'array',
-      label: 'Events Gallery',
+      label: 'Gallery',
       admin: {
         description:
           'Photos from the event itself (separate from the newspaper clippings above) — shown as their own slider on the article page. Leave empty to hide it.',

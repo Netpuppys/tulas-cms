@@ -84,7 +84,11 @@ export interface Config {
     'payload-preferences': PayloadPreference;
     'payload-migrations': PayloadMigration;
   };
-  collectionsJoins: {};
+  collectionsJoins: {
+    courses: {
+      events: 'events';
+    };
+  };
   collectionsSelect: {
     users: UsersSelect<false> | UsersSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
@@ -147,6 +151,7 @@ export interface UserAuthOperations {
  */
 export interface User {
   id: string;
+  password?: string | null;
   updatedAt: string;
   createdAt: string;
   email: string;
@@ -163,7 +168,6 @@ export interface User {
         expiresAt: string;
       }[]
     | null;
-  password?: string | null;
   collection: 'users';
 }
 /**
@@ -539,6 +543,83 @@ export interface Course {
           }
       )[]
     | null;
+  /**
+   * Published events tagged with this course. Add or remove them from the Events collection.
+   */
+  events?: {
+    docs?: (string | Event)[];
+    hasNextPage?: boolean;
+    totalDocs?: number;
+  };
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+}
+/**
+ * Shown on the homepage "Upcoming Events" section (soonest 4) and the full /events page (all upcoming events).
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "events".
+ */
+export interface Event {
+  id: string;
+  title: string;
+  /**
+   * Short summary shown on the /events card. Optional.
+   */
+  description?: string | null;
+  /**
+   * e.g. "Dept. of Computer Science". Optional.
+   */
+  author?: string | null;
+  date: string;
+  /**
+   * Only needed if the event spans more than one day. Leave empty for single-day events.
+   */
+  endDate?: string | null;
+  /**
+   * e.g. "10:00 AM – 6:00 PM". Optional.
+   */
+  timeline?: string | null;
+  /**
+   * e.g. "Innovation Hub, Block C". Optional.
+   */
+  location?: string | null;
+  /**
+   * e.g. "Technical", "Cultural", "Sports". Optional.
+   */
+  category?: string | null;
+  /**
+   * Scopes this event to every course in this school. Leave empty for a general/campus-wide event, or pick specific courses below to narrow it down further.
+   */
+  school?:
+    | (
+        | 'School Of Management & Commerce'
+        | 'School Of Engineering'
+        | 'School Of Computer Applications'
+        | 'School Of Mass Comm. & Journalism'
+        | 'School Of Pharmacy'
+        | 'School Of Law'
+        | 'School Of Agriculture'
+      )
+    | null;
+  /**
+   * Select one or more specific courses, e.g. only "BBA Business Analytics" instead of the whole School. Leave empty to apply to every course in the School above (or campus-wide if no School is selected either).
+   */
+  course?: (string | Course)[] | null;
+  /**
+   * Takes priority over the upload field below.
+   */
+  imageUrl?: string | null;
+  /**
+   * Only used if the Image URL above is empty.
+   */
+  image?: (string | null) | Media;
+  /**
+   * Registration or details link — external URLs show a "Register" button, internal paths show "Details". Leave empty to hide the button entirely.
+   */
+  link?: string | null;
+  status?: ('draft' | 'published') | null;
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
@@ -914,75 +995,6 @@ export interface AcademicNotification {
   _status?: ('draft' | 'published') | null;
 }
 /**
- * Shown on the homepage "Upcoming Events" section (soonest 4) and the full /events page (all upcoming events).
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "events".
- */
-export interface Event {
-  id: string;
-  title: string;
-  /**
-   * Short summary shown on the /events card. Optional.
-   */
-  description?: string | null;
-  /**
-   * e.g. "Dept. of Computer Science". Optional.
-   */
-  author?: string | null;
-  date: string;
-  /**
-   * Only needed if the event spans more than one day. Leave empty for single-day events.
-   */
-  endDate?: string | null;
-  /**
-   * e.g. "10:00 AM – 6:00 PM". Optional.
-   */
-  timeline?: string | null;
-  /**
-   * e.g. "Innovation Hub, Block C". Optional.
-   */
-  location?: string | null;
-  /**
-   * e.g. "Technical", "Cultural", "Sports". Optional.
-   */
-  category?: string | null;
-  /**
-   * Scopes this event to every course in this school. Leave empty for a general/campus-wide event, or pick specific courses below to narrow it down further.
-   */
-  school?:
-    | (
-        | 'School Of Management & Commerce'
-        | 'School Of Engineering'
-        | 'School Of Computer Applications'
-        | 'School Of Mass Comm. & Journalism'
-        | 'School Of Pharmacy'
-        | 'School Of Law'
-        | 'School Of Agriculture'
-      )
-    | null;
-  /**
-   * Select one or more specific courses, e.g. only "BBA Business Analytics" instead of the whole School. Leave empty to apply to every course in the School above (or campus-wide if no School is selected either).
-   */
-  course?: (string | Course)[] | null;
-  /**
-   * Takes priority over the upload field below.
-   */
-  imageUrl?: string | null;
-  /**
-   * Only used if the Image URL above is empty.
-   */
-  image?: (string | null) | Media;
-  /**
-   * Registration or details link — external URLs show a "Register" button, internal paths show "Details". Leave empty to hide the button entirely.
-   */
-  link?: string | null;
-  status?: ('draft' | 'published') | null;
-  updatedAt: string;
-  createdAt: string;
-  _status?: ('draft' | 'published') | null;
-}
-/**
  * Write new posts with the rich text editor below. The legacy HTML field only appears on posts migrated from the old blog.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1172,6 +1184,7 @@ export interface PayloadMigration {
  * via the `definition` "users_select".
  */
 export interface UsersSelect<T extends boolean = true> {
+  password?: T;
   updatedAt?: T;
   createdAt?: T;
   email?: T;
@@ -1491,6 +1504,7 @@ export interface CoursesSelect<T extends boolean = true> {
               blockName?: T;
             };
       };
+  events?: T;
   updatedAt?: T;
   createdAt?: T;
   _status?: T;

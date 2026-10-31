@@ -8,6 +8,15 @@ export const Courses: CollectionConfig = {
   access: {
     read: publishedOrLoggedIn,
   },
+  // Events.course is the only relationship pointing at courses, and all it
+  // needs is the name + slug. Without this, every event joined into a course
+  // response (see the `events` field below) would embed whole course pages,
+  // sections included.
+  defaultPopulate: {
+    title: true,
+    slug: true,
+    navLabel: true,
+  },
   admin: {
     useAsTitle: 'title',
     defaultColumns: ['title', 'level', 'department', 'slug', 'status', 'updatedAt'],
@@ -149,6 +158,25 @@ export const Courses: CollectionConfig = {
       label: 'Page sections',
       minRows: 1,
       blocks: CourseBlocks,
+    },
+    {
+      // Delivers this course's events inside the course response itself, so
+      // tulas_rev's course page needs no separate /api/events calls. Only
+      // events with this course picked in Events.course match - a School
+      // alone doesn't. Newest first; the frontend splits upcoming from past.
+      name: 'events',
+      type: 'join',
+      collection: 'events',
+      on: 'course',
+      where: { status: { equals: 'published' } },
+      defaultSort: '-date',
+      defaultLimit: 12,
+      // The default of 1 would leave each event's image as a bare id.
+      maxDepth: 2,
+      admin: {
+        allowCreate: false,
+        description: 'Published events tagged with this course. Add or remove them from the Events collection.',
+      },
     },
   ],
   hooks: {
