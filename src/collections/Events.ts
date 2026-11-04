@@ -15,8 +15,8 @@ const validateSchool: SelectFieldSingleValidation = (value, options) => {
 // and the full /events gallery (all upcoming, same ordering). `date` is a
 // real date field (not free text) so both views can sort/filter reliably.
 // `endDate` is optional and only set for multi-day events. `link` is
-// optional — the frontend only shows a "Register"/"Details" button on a
-// card when it's set.
+// optional — the frontend only shows an arrow on a card, and makes the card
+// clickable, when it's set.
 export const Events: CollectionConfig = {
   slug: 'events',
   labels: { singular: 'Event', plural: 'Events' },
@@ -154,7 +154,7 @@ export const Events: CollectionConfig = {
       label: 'Link URL',
       admin: {
         description:
-          'Registration or details link — external URLs show a "Register" button, internal paths show "Details". Leave empty to hide the button entirely.',
+          "Registration or details link — shows an arrow on the event card that opens this URL. Leave empty to hide the arrow; the card then isn't clickable.",
       },
     },
     {

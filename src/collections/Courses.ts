@@ -49,6 +49,43 @@ export const Courses: CollectionConfig = {
             description: 'Snippet shown under the title in Google results (aim for 150–160 characters). Falls back to the hero description if left empty.',
           },
         },
+        {
+          // Every course page emits a schema.org "Course" JSON-LD script
+          // built from these fields (with fallbacks), so editors never have
+          // to hand-write the script for the common case.
+          name: 'schema',
+          type: 'group',
+          label: 'Structured data (Google "Course" schema)',
+          admin: {
+            description: 'Added to the page automatically as a <script type="application/ld+json">. Leave everything empty to use the defaults.',
+          },
+          fields: [
+            {
+              name: 'name',
+              type: 'text',
+              label: 'Course full name',
+              admin: {
+                description: 'e.g. "Bachelor of Journalism and Mass Communication (BJMC)". Falls back to the course title.',
+              },
+            },
+            {
+              name: 'description',
+              type: 'textarea',
+              label: 'Course description',
+              admin: {
+                description: 'Plain-text summary of the programme. Falls back to the SEO description, then the hero description.',
+              },
+            },
+            {
+              name: 'custom',
+              type: 'json',
+              label: 'Custom JSON-LD (advanced)',
+              admin: {
+                description: 'Optional. Paste only the JSON object — without the <script> tags. When filled, it replaces the auto-generated schema entirely.',
+              },
+            },
+          ],
+        },
       ],
     },
     { name: 'program', type: 'text', admin: { description: 'e.g. "BBA", "BTech", "MBA"' } },

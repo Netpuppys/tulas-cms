@@ -216,6 +216,31 @@ export interface Course {
      * Snippet shown under the title in Google results (aim for 150–160 characters). Falls back to the hero description if left empty.
      */
     description?: string | null;
+    /**
+     * Added to the page automatically as a <script type="application/ld+json">. Leave everything empty to use the defaults.
+     */
+    schema?: {
+      /**
+       * e.g. "Bachelor of Journalism and Mass Communication (BJMC)". Falls back to the course title.
+       */
+      name?: string | null;
+      /**
+       * Plain-text summary of the programme. Falls back to the SEO description, then the hero description.
+       */
+      description?: string | null;
+      /**
+       * Optional. Paste only the JSON object — without the <script> tags. When filled, it replaces the auto-generated schema entirely.
+       */
+      custom?:
+        | {
+            [k: string]: unknown;
+          }
+        | unknown[]
+        | string
+        | number
+        | boolean
+        | null;
+    };
   };
   /**
    * e.g. "BBA", "BTech", "MBA"
@@ -620,7 +645,7 @@ export interface Event {
    */
   image?: (string | null) | Media;
   /**
-   * Registration or details link — external URLs show a "Register" button, internal paths show "Details". Leave empty to hide the button entirely.
+   * Registration or details link — shows an arrow on the event card that opens this URL. Leave empty to hide the arrow; the card then isn't clickable.
    */
   link?: string | null;
   status?: ('draft' | 'published') | null;
@@ -1241,6 +1266,13 @@ export interface CoursesSelect<T extends boolean = true> {
     | {
         title?: T;
         description?: T;
+        schema?:
+          | T
+          | {
+              name?: T;
+              description?: T;
+              custom?: T;
+            };
       };
   program?: T;
   school?: T;
