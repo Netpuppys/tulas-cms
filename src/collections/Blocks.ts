@@ -403,6 +403,27 @@ export const FeeTableBlock: Block = {
   ],
 }
 
+// SEO "Read More" card shown at the very bottom of the course page. Mirrors
+// the homepage's last section (the "Best University in Dehradun" card): a
+// title plus freely formatted rich text that stays collapsed behind a
+// "Read More" button. The copy is always in the HTML, so crawlers see it all.
+export const ReadMoreBlock: Block = {
+  slug: 'readMore',
+  labels: { singular: 'Read More', plural: 'Read More' },
+  fields: [
+    { name: 'title', type: 'text', required: true },
+    {
+      name: 'content',
+      type: 'richText',
+      required: true,
+      admin: {
+        description:
+          "Long-form content. Only the start shows until a visitor clicks \"Read More\". Type '/' for headings, lists, etc.",
+      },
+    },
+  ],
+}
+
 export const CourseBlocks: Block[] = [
   HeroBlock,
   OverviewBlock,
@@ -414,4 +435,5 @@ export const CourseBlocks: Block[] = [
   CareersBlock,
   WhyStudyBlock,
   RecruitersBlock,
+  ReadMoreBlock,
 ]

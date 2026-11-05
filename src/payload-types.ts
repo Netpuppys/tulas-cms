@@ -566,6 +566,30 @@ export interface Course {
             blockName?: string | null;
             blockType: 'recruiters';
           }
+        | {
+            title: string;
+            /**
+             * Long-form content. Only the start shows until a visitor clicks "Read More". Type '/' for headings, lists, etc.
+             */
+            content: {
+              root: {
+                type: string;
+                children: {
+                  type: any;
+                  version: number;
+                  [k: string]: unknown;
+                }[];
+                direction: ('ltr' | 'rtl') | null;
+                format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+                indent: number;
+                version: number;
+              };
+              [k: string]: unknown;
+            };
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'readMore';
+          }
       )[]
     | null;
   /**
@@ -1536,6 +1560,14 @@ export interface CoursesSelect<T extends boolean = true> {
               subtitle?: T;
               logos1?: T;
               logos2?: T;
+              id?: T;
+              blockName?: T;
+            };
+        readMore?:
+          | T
+          | {
+              title?: T;
+              content?: T;
               id?: T;
               blockName?: T;
             };
