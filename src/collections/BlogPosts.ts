@@ -1,4 +1,5 @@
 import type { CollectionConfig } from 'payload'
+import { EXPERIMENTAL_TableFeature, lexicalEditor } from '@payloadcms/richtext-lexical'
 
 // Replaces the old standalone blog stack (tulas-blog-backend / Express +
 // Prisma + a custom Vite admin at blog.tulas.edu.in).
@@ -74,7 +75,12 @@ export const BlogPosts: CollectionConfig = {
       name: 'body',
       type: 'richText',
       label: 'Content',
-      admin: { description: "Main content. Use '/' for elements " },
+      // Table feature lets tables pasted from Word/Docs/web pages keep their
+      // rows & columns instead of collapsing into one line of text.
+      editor: lexicalEditor({
+        features: ({ defaultFeatures }) => [...defaultFeatures, EXPERIMENTAL_TableFeature()],
+      }),
+      admin: { description: "Main content. Use '/' for elements (including Table). Tables can also be pasted directly." },
     },
     {
       name: 'content',
