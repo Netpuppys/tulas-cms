@@ -129,22 +129,57 @@ export const Articles: CollectionConfig = {
       label: 'Event Videos',
       admin: {
         description:
-          'YouTube or Vimeo links only (no uploads) — shown as embedded players on the article page. Leave empty to hide.',
+          'Add each video as either a link (YouTube, Vimeo, or a direct .mp4/.webm file) or an iframe embed code — shown as players on the article page. Leave empty to hide.',
       },
       fields: [
         {
+          name: 'type',
+          type: 'radio',
+          label: 'Add video as',
+          defaultValue: 'link',
+          options: [
+            { label: 'Direct link', value: 'link' },
+            { label: 'Iframe embed code', value: 'iframe' },
+          ],
+          admin: { layout: 'horizontal' },
+        },
+        {
           name: 'url',
           type: 'text',
-          required: true,
-          label: 'YouTube / Vimeo link',
-          admin: { description: 'Paste the normal video link, e.g. https://www.youtube.com/watch?v=… or https://vimeo.com/…' },
-          validate: (value: string | null | undefined) => {
-            if (!value) return 'Video link is required'
-            return /^https?:\/\/((www\.|m\.)?youtube\.com\/(watch|embed|shorts)|youtu\.be\/|(www\.|player\.)?vimeo\.com\/)/i.test(
-              value.trim(),
-            )
+          label: 'Video link',
+          admin: {
+            // Older videos were saved before `type` existed — treat them as links.
+            condition: (_, siblingData) => siblingData?.type !== 'iframe',
+            description:
+              'e.g. https://www.youtube.com/watch?v=…, https://vimeo.com/…, or a direct video file link ending in .mp4 / .webm',
+          },
+          validate: (value: string | null | undefined, { siblingData }: { siblingData: { type?: string } }) => {
+            if (siblingData?.type === 'iframe') return true
+            if (!value?.trim()) return 'Video link is required'
+            const v = value.trim()
+            const isYoutubeVimeo =
+              /^https?:\/\/((www\.|m\.)?youtube\.com\/(watch|embed|shorts|live)|youtu\.be\/|(www\.|player\.)?vimeo\.com\/)/i.test(v)
+            const isVideoFile = /^https:\/\/[^\s]+\.(mp4|webm|ogg|mov)(\?[^\s]*)?$/i.test(v)
+            return isYoutubeVimeo || isVideoFile
               ? true
-              : 'Only YouTube or Vimeo links are allowed'
+              : 'Use a YouTube or Vimeo link, or a direct https link to a .mp4 / .webm / .ogg / .mov file'
+          },
+        },
+        {
+          name: 'embedCode',
+          type: 'textarea',
+          label: 'Iframe embed code',
+          admin: {
+            condition: (_, siblingData) => siblingData?.type === 'iframe',
+            description:
+              'Paste the embed code from the video site (usually under Share → Embed), e.g. <iframe src="https://player.vimeo.com/video/…"></iframe>. Only the iframe\'s https src is used.',
+          },
+          validate: (value: string | null | undefined, { siblingData }: { siblingData: { type?: string } }) => {
+            if (siblingData?.type !== 'iframe') return true
+            if (!value?.trim()) return 'Embed code is required'
+            return /<iframe[^>]*\ssrc=["']https:\/\/[^"']+["']/i.test(value)
+              ? true
+              : 'Paste a full <iframe … src="https://…"></iframe> embed code'
           },
         },
         { name: 'caption', type: 'text' },

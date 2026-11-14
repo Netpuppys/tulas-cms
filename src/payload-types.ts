@@ -819,14 +819,19 @@ export interface Article {
       }[]
     | null;
   /**
-   * YouTube or Vimeo links only (no uploads) — shown as embedded players on the article page. Leave empty to hide.
+   * Add each video as either a link (YouTube, Vimeo, or a direct .mp4/.webm file) or an iframe embed code — shown as players on the article page. Leave empty to hide.
    */
   videos?:
     | {
+        type?: ('link' | 'iframe') | null;
         /**
-         * Paste the normal video link, e.g. https://www.youtube.com/watch?v=… or https://vimeo.com/…
+         * e.g. https://www.youtube.com/watch?v=…, https://vimeo.com/…, or a direct video file link ending in .mp4 / .webm
          */
-        url: string;
+        url?: string | null;
+        /**
+         * Paste the embed code from the video site (usually under Share → Embed), e.g. <iframe src="https://player.vimeo.com/video/…"></iframe>. Only the iframe's https src is used.
+         */
+        embedCode?: string | null;
         caption?: string | null;
         id?: string | null;
       }[]
@@ -1073,7 +1078,7 @@ export interface BlogPost {
    */
   bannerImage?: (string | null) | Media;
   /**
-   * Main content. Use '/' for elements
+   * Main content. Use '/' for elements (including Table). Tables can also be pasted directly.
    */
   body?: {
     root: {
@@ -1654,7 +1659,9 @@ export interface ArticlesSelect<T extends boolean = true> {
   videos?:
     | T
     | {
+        type?: T;
         url?: T;
+        embedCode?: T;
         caption?: T;
         id?: T;
       };
