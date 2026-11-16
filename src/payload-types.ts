@@ -1073,7 +1073,7 @@ export interface BlogPost {
    */
   bannerImage?: (string | null) | Media;
   /**
-   * Main content. Use '/' for elements
+   * Main content. Use '/' for elements (including Table). Tables can also be pasted directly.
    */
   body?: {
     root: {
