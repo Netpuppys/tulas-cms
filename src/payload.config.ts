@@ -49,6 +49,16 @@ admin: {
   importMap: {
     baseDir: path.resolve(dirname),
   },
+  // The S3 plugin wraps the whole admin UI in this provider, but only when the
+  // S3_* env vars are set. If the import map is regenerated on a machine
+  // without them, the entry is dropped and production /admin renders blank.
+  // Listing it here keeps it in the import map regardless of local env.
+  dependencies: {
+    s3ClientUploadHandler: {
+      type: 'component',
+      path: '@payloadcms/storage-s3/client#S3ClientUploadHandler',
+    },
+  },
 },
   collections: [Users, Media, UnusedMedia, Courses, FeeStructures, Articles, Placements, PlacementHero, Trendsetters, AcademicNotifications, Events, BlogPosts],
   globals: [HomeIntro],
