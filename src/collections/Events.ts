@@ -11,12 +11,6 @@ const validateSchool: SelectFieldSingleValidation = (value, options) => {
   return select(value, options)
 }
 
-// Powers the homepage "Upcoming Events" preview (soonest 4, upcoming only)
-// and the full /events gallery (all upcoming, same ordering). `date` is a
-// real date field (not free text) so both views can sort/filter reliably.
-// `endDate` is optional and only set for multi-day events. `link` is
-// optional — the frontend only shows an arrow on a card, and makes the card
-// clickable, when it's set.
 export const Events: CollectionConfig = {
   slug: 'events',
   labels: { singular: 'Event', plural: 'Events' },
@@ -89,9 +83,6 @@ export const Events: CollectionConfig = {
       hooks: {
         afterRead: [({ siblingData }) => (isSchoolEvent(siblingData) ? 'school' : 'common')],
         beforeValidate: [
-          // Reads siblingData rather than the hook's `value`, which is filled
-          // in with the default when the field wasn't sent - a partial update
-          // that only sets `school` must not wipe it.
           ({ siblingData }) => {
             if (siblingData?.eventScope === 'common') {
               siblingData.school = null
@@ -102,10 +93,6 @@ export const Events: CollectionConfig = {
       },
     },
     {
-      // Powers the /events page's course filter (Common -> Schools ->
-      // department -> course). Picking a school alone scopes the event to
-      // every course in that school; `course` narrows it down further to
-      // specific courses within that school.
       name: 'school',
       type: 'select',
       label: 'School',
@@ -117,9 +104,7 @@ export const Events: CollectionConfig = {
       },
     },
     {
-      // Filtered to the school selected above - the field still stores plain
-      // course relationships, so the filter is just a convenience for finding
-      // the right courses faster (and rejects courses from another school).
+     
       name: 'course',
       type: 'relationship',
       relationTo: 'courses',
