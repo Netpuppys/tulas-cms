@@ -403,6 +403,58 @@ export const FeeTableBlock: Block = {
   ],
 }
 
+// "Eligibility Criteria" card on the course page. It sits in the sidebar
+// next to the fee table (or on its own, centred, if the course has no fee
+// table block). The content is rich text, so editors can use bullet lists,
+// bold text, links, etc. instead of a fixed list of strings.
+export const EligibilityBlock: Block = {
+  slug: 'eligibility',
+  labels: { singular: 'Eligibility', plural: 'Eligibility' },
+  fields: [
+    {
+      name: 'title',
+      type: 'text',
+      required: true,
+      defaultValue: 'Eligibility Criteria',
+    },
+    {
+      name: 'content',
+      type: 'richText',
+      required: true,
+      admin: {
+        description:
+          "Eligibility requirements for this course. Use a bullet list for one criterion per line. Type '/' for lists, headings, etc.",
+      },
+    },
+  ],
+}
+
+// "Where <Course> Takes Us" section on the course page, shown right after
+// the Careers section: a heading plus freely formatted rich text about where
+// the course leads (career paths, higher studies, industries, etc.).
+export const WhereCourseTakesBlock: Block = {
+  slug: 'whereCourseTakes',
+  labels: { singular: 'Where This Course Takes Us', plural: 'Where This Course Takes Us' },
+  fields: [
+    {
+      name: 'title',
+      type: 'text',
+      required: true,
+      admin: {
+        description: 'Section heading, e.g. "Where B.Tech CSE Takes Us".',
+      },
+    },
+    {
+      name: 'content',
+      type: 'richText',
+      required: true,
+      admin: {
+        description: "Type '/' for headings, bullet lists, etc.",
+      },
+    },
+  ],
+}
+
 // SEO "Read More" card shown at the very bottom of the course page. Mirrors
 // the homepage's last section (the "Best University in Dehradun" card): a
 // title plus freely formatted rich text that stays collapsed behind a
@@ -432,7 +484,9 @@ export const CourseBlocks: Block[] = [
   CertificationsBlock,
   ProgramDetailsBlock,
   FeeTableBlock,
+  EligibilityBlock,
   CareersBlock,
+  WhereCourseTakesBlock,
   WhyStudyBlock,
   RecruitersBlock,
   ReadMoreBlock,

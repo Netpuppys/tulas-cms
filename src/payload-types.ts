@@ -509,6 +509,30 @@ export interface Course {
             blockType: 'feeTable';
           }
         | {
+            title: string;
+            /**
+             * Eligibility requirements for this course. Use a bullet list for one criterion per line. Type '/' for lists, headings, etc.
+             */
+            content: {
+              root: {
+                type: string;
+                children: {
+                  type: any;
+                  version: number;
+                  [k: string]: unknown;
+                }[];
+                direction: ('ltr' | 'rtl') | null;
+                format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+                indent: number;
+                version: number;
+              };
+              [k: string]: unknown;
+            };
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'eligibility';
+          }
+        | {
             header?: {
               label?: string | null;
               title?: string | null;
@@ -536,6 +560,33 @@ export interface Course {
             id?: string | null;
             blockName?: string | null;
             blockType: 'careers';
+          }
+        | {
+            /**
+             * Section heading, e.g. "Where B.Tech CSE Takes Us".
+             */
+            title: string;
+            /**
+             * Type '/' for headings, bullet lists, etc.
+             */
+            content: {
+              root: {
+                type: string;
+                children: {
+                  type: any;
+                  version: number;
+                  [k: string]: unknown;
+                }[];
+                direction: ('ltr' | 'rtl') | null;
+                format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+                indent: number;
+                version: number;
+              };
+              [k: string]: unknown;
+            };
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'whereCourseTakes';
           }
         | {
             header?: {
@@ -1501,6 +1552,14 @@ export interface CoursesSelect<T extends boolean = true> {
               id?: T;
               blockName?: T;
             };
+        eligibility?:
+          | T
+          | {
+              title?: T;
+              content?: T;
+              id?: T;
+              blockName?: T;
+            };
         careers?:
           | T
           | {
@@ -1527,6 +1586,14 @@ export interface CoursesSelect<T extends boolean = true> {
                     label?: T;
                     id?: T;
                   };
+              id?: T;
+              blockName?: T;
+            };
+        whereCourseTakes?:
+          | T
+          | {
+              title?: T;
+              content?: T;
               id?: T;
               blockName?: T;
             };
