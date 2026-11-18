@@ -1,4 +1,5 @@
 import type { Block, Field } from 'payload'
+import { EXPERIMENTAL_TableFeature, lexicalEditor } from '@payloadcms/richtext-lexical'
 
 /**
  * Rebuilt to match the REAL prop shapes destructured in
@@ -468,9 +469,14 @@ export const ReadMoreBlock: Block = {
       name: 'content',
       type: 'richText',
       required: true,
+      // Same table support as BlogPosts.body: tables can be inserted via '/'
+      // or pasted from Word/Docs/web pages with rows & columns intact.
+      editor: lexicalEditor({
+        features: ({ defaultFeatures }) => [...defaultFeatures, EXPERIMENTAL_TableFeature()],
+      }),
       admin: {
         description:
-          "Long-form content. Only the start shows until a visitor clicks \"Read More\". Type '/' for headings, lists, etc.",
+          "Long-form content. Only the start shows until a visitor clicks \"Read More\". Type '/' for headings, lists, tables, etc. Tables can also be pasted directly.",
       },
     },
   ],

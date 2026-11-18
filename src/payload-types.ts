@@ -620,7 +620,7 @@ export interface Course {
         | {
             title: string;
             /**
-             * Long-form content. Only the start shows until a visitor clicks "Read More". Type '/' for headings, lists, etc.
+             * Long-form content. Only the start shows until a visitor clicks "Read More". Type '/' for headings, lists, tables, etc. Tables can also be pasted directly.
              */
             content: {
               root: {
